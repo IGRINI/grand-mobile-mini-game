@@ -2,7 +2,7 @@ using UnityEngine;
 
 public interface IInputService
 {
-    Vector2 Steering { get; }
+    Vector2 MoveDirection { get; }
     bool Gas { get; }
     bool Brake { get; }
 } 

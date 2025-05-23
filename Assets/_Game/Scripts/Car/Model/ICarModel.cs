@@ -5,5 +5,8 @@ public interface ICarModel
     float MaxSpeed { get; }
     float MaxReverseSpeed { get; }
     float TurnSpeed { get; }
+    float MinSpeedToTurn { get; }
     float CurrentSpeed { get; set; }
+    float MaxTurnRate { get; }
+    float TurnRateSpeedFactor { get; }
 } 

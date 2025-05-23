@@ -29,19 +29,8 @@ public class CarController : ITickable, IDisposable
 
     private void UpdateCar(float deltaTime)
     {
-        var steering = _input.Steering;
-        // высчитываем угол рулевых колес: между текущим направлением и направлением джойстика
-        float steerAngle = 0f;
-        if (steering.sqrMagnitude > 0f)
-        {
-            var desiredDir = new Vector3(steering.x, 0, steering.y).normalized;
-            // угол между впередом машины и направлением джойстика
-            steerAngle = Vector3.SignedAngle(_view.Transform.forward, desiredDir, Vector3.up);
-            steerAngle = Mathf.Clamp(steerAngle, -_maxSteerAngle, _maxSteerAngle);
-            // поворачиваем машину в сторону джойстика
-            var targetRot = Quaternion.LookRotation(desiredDir);
-            _view.Transform.rotation = Quaternion.RotateTowards(_view.Transform.rotation, targetRot, _model.TurnSpeed * deltaTime);
-        }
+        var moveDirection = _input.MoveDirection;
+        
         if (_input.Gas)
         {
             _model.CurrentSpeed = Mathf.Clamp(_model.CurrentSpeed + _model.Acceleration * deltaTime, -_model.MaxReverseSpeed, _model.MaxSpeed);
@@ -54,23 +43,51 @@ public class CarController : ITickable, IDisposable
         {
             _model.CurrentSpeed = Mathf.MoveTowards(_model.CurrentSpeed, 0, _model.BrakeForce * deltaTime);
         }
+
+        if (moveDirection.sqrMagnitude > 0.01f && Mathf.Abs(_model.CurrentSpeed) >= _model.MinSpeedToTurn)
+        {
+            Vector3 targetDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            Vector3 currentForward = _view.Transform.forward;
+            
+            float angleDifference = Vector3.SignedAngle(currentForward, targetDirection, Vector3.up);
+            
+            float speedFactor = Mathf.Abs(_model.CurrentSpeed) / _model.MaxSpeed;
+            float currentTurnRate = _model.MaxTurnRate * speedFactor * _model.TurnRateSpeedFactor;
+            
+            float maxTurnThisFrame = currentTurnRate * deltaTime;
+            float actualTurn = Mathf.Clamp(angleDifference, -maxTurnThisFrame, maxTurnThisFrame);
+            
+            Vector3 rearAxisPos = _view.RearAxisCenter.position;
+            _view.Transform.RotateAround(rearAxisPos, Vector3.up, actualTurn);
+            
+            float steerAngle = Mathf.Clamp(angleDifference / 45f, -1f, 1f) * _maxSteerAngle;
+            if (_steerPivots != null)
+            {
+                foreach (var pivot in _steerPivots)
+                {
+                    pivot.localRotation = Quaternion.Euler(0, steerAngle, 0);
+                }
+            }
+        }
+        else
+        {
+            if (_steerPivots != null)
+            {
+                foreach (var pivot in _steerPivots)
+                {
+                    pivot.localRotation = Quaternion.Slerp(pivot.localRotation, Quaternion.identity, deltaTime * 5f);
+                }
+            }
+        }
+
         _view.Transform.position += _view.Transform.forward * _model.CurrentSpeed * deltaTime;
 
-        // вращение колес
         if (_wheels != null)
         {
             float spinDelta = _model.CurrentSpeed * deltaTime * 360f;
             foreach (var wheel in _wheels)
             {
                 wheel.Rotate(_view.WheelSpinAxis, spinDelta, Space.Self);
-            }
-        }
-        // поворот рулевых частей по рассчитанному углу
-        if (_steerPivots != null)
-        {
-            foreach (var pivot in _steerPivots)
-            {
-                pivot.localRotation = Quaternion.Euler(0, steerAngle, 0);
             }
         }
     }

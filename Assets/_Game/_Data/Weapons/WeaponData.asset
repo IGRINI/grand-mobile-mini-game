@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0620a5215a91a23438dfd7d96867a712, type: 3}
+  m_Name: WeaponData
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  WeaponName: Makarov
+  WeaponPrefab: {fileID: 8104517562697164001, guid: d50c20db5519d2847ae748071950d281, type: 3}
+  ProjectilePrefab: {fileID: 0}
+  Damage: 10
+  FireRate: 1
+  ProjectileSpeed: 0

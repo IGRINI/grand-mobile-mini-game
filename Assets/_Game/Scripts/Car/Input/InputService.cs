@@ -15,7 +15,7 @@ public class InputService : IInputService, IInitializable, IDisposable
         _asset = asset;
     }
 
-    public Vector2 Steering => _steeringAction.ReadValue<Vector2>();
+    public Vector2 MoveDirection => _steeringAction.ReadValue<Vector2>();
     public bool Gas => _gasAction.ReadValue<float>() > 0;
     public bool Brake => _brakeAction.ReadValue<float>() > 0;
 
