@@ -16,7 +16,7 @@ public class CarInstaller : MonoInstaller
         Container.BindInstance(inputAsset).AsSingle();
         Container.Bind<ICarModel>().To<CarModel>().AsSingle().WithArguments(acceleration, brakeForce, maxSpeed, maxReverseSpeed, turnSpeed);
         Container.Bind<ICarView>().To<CarView>().FromComponentInHierarchy().AsSingle();
-        Container.Bind<IInputService>().To<InputService>().AsSingle().NonLazy();
+        Container.BindInterfacesAndSelfTo<InputService>().AsSingle().NonLazy();
         Container.BindInterfacesTo<CarController>().AsSingle().NonLazy();
     }
 } 
