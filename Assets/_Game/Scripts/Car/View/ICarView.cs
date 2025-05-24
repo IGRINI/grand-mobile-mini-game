@@ -10,4 +10,14 @@ public interface ICarView
     float MaxSteerAngle { get; }
     Vector3 WheelSpinAxis { get; }
     IReadOnlyList<Transform> CharacterPivots { get; }
+    Transform CarBody { get; }
+    float MaxLeanAngle { get; }
+    float LeanSpring { get; }
+    float LeanDamping { get; }
+    float PitchSpring { get; }
+    float PitchDamping { get; }
+    float BasePitchAngle { get; }
+    float AccelerationPitchFactor { get; }
+    float MaxPitchAngle { get; }
+    Transform HitTarget { get; }
 } 

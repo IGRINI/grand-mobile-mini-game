@@ -2,7 +2,11 @@
     "name": "Zenject-PoolMonitor-Editor",
     "references": [
         "Zenject",
-        "Zenject-Editor"
+        "Zenject-Editor",
+        "UnityEditor.UI",
+        "UnityEngine.UI",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
     ],
     "includePlatforms": [
         "Editor"

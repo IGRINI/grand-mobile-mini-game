@@ -11,15 +11,26 @@ public class CarController : ITickable, IDisposable
     private readonly ICarModel _model;
     private readonly ICarView _view;
     private readonly IInputService _input;
+    private float _currentLeanAngle;
+    private float _leanVelocity;
+    private float _currentPitchAngle;
+    private float _pitchVelocity;
+    private readonly IHealthService _healthService;
+    private IHealth _health;
+    private readonly float _initialHealth;
 
-    public CarController(ICarModel model, ICarView view, IInputService input)
+    public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, float initialHealth)
     {
+        _healthService = healthService;
+        _initialHealth = initialHealth;
         _model = model;
         _view = view;
         _input = input;
         _wheels = view.Wheels;
         _steerPivots = view.SteerPivots;
         _maxSteerAngle = view.MaxSteerAngle;
+        _health = new Health(initialHealth);
+        _healthService.RegisterEntity(this, _health);
     }
 
     public void Tick()
@@ -30,7 +41,11 @@ public class CarController : ITickable, IDisposable
     private void UpdateCar(float deltaTime)
     {
         var moveDirection = _input.MoveDirection;
+        float targetLeanAngle = 0f;
+        float targetPitchAngle = 0f;
         
+        float previousSpeed = _model.CurrentSpeed;
+
         if (_input.Gas)
         {
             _model.CurrentSpeed = Mathf.Clamp(_model.CurrentSpeed + _model.Acceleration * deltaTime, -_model.MaxReverseSpeed, _model.MaxSpeed);
@@ -61,6 +76,8 @@ public class CarController : ITickable, IDisposable
             _view.Transform.RotateAround(rearAxisPos, Vector3.up, actualTurn);
             
             float steerAngle = Mathf.Clamp(angleDifference / 45f, -1f, 1f) * _maxSteerAngle;
+            if (_model.CurrentSpeed < 0f)
+                steerAngle = -steerAngle;
             if (_steerPivots != null)
             {
                 foreach (var pivot in _steerPivots)
@@ -68,6 +85,10 @@ public class CarController : ITickable, IDisposable
                     pivot.localRotation = Quaternion.Euler(0, steerAngle, 0);
                 }
             }
+
+            targetLeanAngle = Mathf.Clamp(actualTurn / maxTurnThisFrame, -1f, 1f) * _view.MaxLeanAngle;
+            if (_model.CurrentSpeed < 0f)
+                targetLeanAngle = -targetLeanAngle;
         }
         else
         {
@@ -82,6 +103,11 @@ public class CarController : ITickable, IDisposable
 
         _view.Transform.position += _view.Transform.forward * _model.CurrentSpeed * deltaTime;
 
+        float speedChange = (_model.CurrentSpeed - previousSpeed) / deltaTime;
+        float basePitch = Mathf.Sign(_model.CurrentSpeed) * _view.BasePitchAngle;
+        targetPitchAngle = basePitch - speedChange * _view.AccelerationPitchFactor;
+        targetPitchAngle = Mathf.Clamp(targetPitchAngle, -_view.MaxPitchAngle, _view.MaxPitchAngle);
+
         if (_wheels != null)
         {
             float spinDelta = _model.CurrentSpeed * deltaTime * 360f;
@@ -90,10 +116,24 @@ public class CarController : ITickable, IDisposable
                 wheel.Rotate(_view.WheelSpinAxis, spinDelta, Space.Self);
             }
         }
+
+        if (_view.CarBody != null)
+        {
+            _leanVelocity += (targetLeanAngle - _currentLeanAngle) * _view.LeanSpring * deltaTime;
+            _leanVelocity *= 1f - _view.LeanDamping * deltaTime;
+            _currentLeanAngle += _leanVelocity * deltaTime;
+            
+            _pitchVelocity += (targetPitchAngle - _currentPitchAngle) * _view.PitchSpring * deltaTime;
+            _pitchVelocity *= 1f - _view.PitchDamping * deltaTime;
+            _currentPitchAngle += _pitchVelocity * deltaTime;
+            _currentPitchAngle = Mathf.Clamp(_currentPitchAngle, -_view.MaxPitchAngle, _view.MaxPitchAngle);
+            
+            _view.CarBody.localRotation = Quaternion.Euler(_currentPitchAngle, 0f, _currentLeanAngle);
+        }
     }
 
     public void Dispose()
     {
-        // нет ресурсов для очистки
+        _healthService.UnregisterEntity(this);
     }
 } 

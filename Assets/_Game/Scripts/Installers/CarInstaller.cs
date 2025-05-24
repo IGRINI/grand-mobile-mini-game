@@ -13,11 +13,13 @@ public class CarInstaller : MonoInstaller
     [SerializeField] private float minSpeedToTurn = 1f;
     [SerializeField] private float maxTurnRate = 270f;
     [SerializeField] private float turnRateSpeedFactor = 0.5f;
+    [SerializeField] private float initialHealth = 100f;
 
     public override void InstallBindings()
     {
         Container.BindInstance(inputAsset).AsSingle();
         Container.Bind<ICarModel>().To<CarModel>().AsSingle().WithArguments(new object[]{acceleration, brakeForce, maxSpeed, maxReverseSpeed, turnSpeed, minSpeedToTurn, maxTurnRate, turnRateSpeedFactor});
+        Container.BindInstance(initialHealth).WhenInjectedInto<CarController>();
         Container.Bind<ICarView>().To<CarView>().FromComponentInHierarchy().AsSingle();
         Container.BindInterfacesAndSelfTo<InputService>().AsSingle().NonLazy();
         Container.BindInterfacesTo<CarController>().AsSingle().NonLazy();

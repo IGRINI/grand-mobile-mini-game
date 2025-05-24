@@ -1,7 +1,9 @@
 {
     "name": "UniTask.Linq",
     "references": [
-        "UniTask"
+        "UniTask",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

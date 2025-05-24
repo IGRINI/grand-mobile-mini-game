@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   CharacterName: Bandit
   CharacterPrefab: {fileID: 6840442464766576274, guid: 755c1e5fd7fec9348baa23b39a16ed8a, type: 3}
-  DefaultWeapon: {fileID: 0}
+  DefaultWeapon: {fileID: 11400000, guid: 44f07797ee2181045a60bc6f7e2e3098, type: 2}
+  Health: 1000

@@ -4,13 +4,15 @@ using Zenject;
 
 public class CharacterService : ICharacterService, IInitializable
 {
-    private readonly List<Character> _characters = new List<Character>();
+    private readonly List<Character> _characters = new();
     private Character _selected;
     private readonly ICarView _carView;
+    private readonly DiContainer _diContainer;
 
-    public CharacterService(CharacterData[] configs, ICarView carView)
+    public CharacterService(CharacterData[] configs, ICarView carView, DiContainer container)
     {
         _carView = carView;
+        _diContainer = container;
         foreach (var config in configs)
         {
             _characters.Add(new Character(config));
@@ -44,22 +46,10 @@ public class CharacterService : ICharacterService, IInitializable
         var pivot = pivots[slotIndex];
         for (int i = pivot.childCount - 1; i >= 0; i--)
             Object.Destroy(pivot.GetChild(i).gameObject);
-        var instance = Object.Instantiate(character.Prefab, pivot);
+        var instance = _diContainer.InstantiatePrefab(character.Prefab, pivot);
         instance.transform.localPosition = Vector3.zero;
         instance.transform.localRotation = Quaternion.identity;
         var view = instance.GetComponent<ICharacterView>();
         view?.Initialize(character);
-        var weaponPivot = view?.WeaponPivot;
-        var weaponData = character.DefaultWeapon;
-        if (weaponPivot != null && weaponData != null && weaponData.WeaponPrefab != null)
-        {
-            for (int i = weaponPivot.childCount - 1; i >= 0; i--)
-                Object.Destroy(weaponPivot.GetChild(i).gameObject);
-            var weaponInstance = Object.Instantiate(weaponData.WeaponPrefab, weaponPivot);
-            weaponInstance.transform.localPosition = Vector3.zero;
-            weaponInstance.transform.localRotation = Quaternion.identity;
-            var wc = weaponInstance.GetComponent<IWeaponController>();
-            wc?.Initialize(weaponData);
-        }
     }
 } 

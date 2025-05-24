@@ -9,4 +9,6 @@ public class WeaponData : ScriptableObject
     public float Damage;
     public float FireRate;
     public float ProjectileSpeed;
+    public float Range = 50f;
+    public float ProjectileLifetime = 5f;
 } 

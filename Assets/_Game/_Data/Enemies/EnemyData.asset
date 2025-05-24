@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a419f9aca6b7fbf4e8c46c2eef608e0c, type: 3}
+  m_Name: EnemyData
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  EnemyName: Cop
+  EnemyPrefab: {fileID: 3202920299948734885, guid: 46cbc7e75e7c10d4a97cbe1648accd34, type: 3}
+  Health: 100
+  MoveSpeed: 3
+  AttackDamage: 1
+  AttackRange: 10
+  AttackCooldown: 1
+  RewardExperience: 0
+  DefaultWeapon: {fileID: 11400000, guid: 44f07797ee2181045a60bc6f7e2e3098, type: 2}
