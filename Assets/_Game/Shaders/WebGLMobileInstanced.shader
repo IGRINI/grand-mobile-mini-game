@@ -7,13 +7,13 @@ Shader "Custom/URP/WebGLMobileInstanced"
     }
     SubShader
     {
-        Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" }
+        Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" "ReceiveShadows"="True" }
         LOD 100
 
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode"="UniversalForward" }
+            Tags { "LightMode"="UniversalForward" "ReceiveShadows"="True" }
 
             HLSLPROGRAM
             #pragma vertex vert

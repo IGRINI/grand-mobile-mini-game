@@ -4,10 +4,12 @@ using Zenject;
 public class AttackSystem : IAttackSystem
 {
     private readonly IProjectileService _projectileService;
+    private readonly IHealthService _healthService;
 
-    public AttackSystem(IProjectileService projectileService)
+    public AttackSystem(IProjectileService projectileService, IHealthService healthService)
     {
         _projectileService = projectileService;
+        _healthService = healthService;
     }
 
     public bool CanAttack(Transform attacker, Vector3 targetPosition, WeaponData weaponData)
@@ -29,7 +31,7 @@ public class AttackSystem : IAttackSystem
         var spawnPos = spawnPoint.position;
         var direction = (targetPosition - spawnPos).normalized;
         
-        _projectileService.FireProjectile(
+        var projectileGO = _projectileService.FireProjectile(
             spawnPos,
             direction,
             weaponData.ProjectileSpeed,
@@ -37,5 +39,11 @@ public class AttackSystem : IAttackSystem
             weaponData.ProjectilePrefab,
             weaponData.ProjectileLifetime
         );
+        
+        float distance = Vector3.Distance(spawnPos, targetPosition);
+        float travelTime = distance / weaponData.ProjectileSpeed;
+        var scheduler = projectileGO.AddComponent<ProjectileDamageScheduler>();
+        scheduler.Construct(_healthService);
+        scheduler.Initialize(target, weaponData.Damage, travelTime);
     }
 } 

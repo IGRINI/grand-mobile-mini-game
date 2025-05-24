@@ -14,7 +14,7 @@ public class ProjectileService : IProjectileService
         _enemyService = enemyService;
     }
 
-    public void FireProjectile(Vector3 spawnPosition, Vector3 direction, float speed, float damage, GameObject projectilePrefab, float projectileLifetime)
+    public GameObject FireProjectile(Vector3 spawnPosition, Vector3 direction, float speed, float damage, GameObject projectilePrefab, float projectileLifetime)
     {
         var projectileGO = _projectileFactory.CreateProjectile(projectilePrefab, spawnPosition, Quaternion.LookRotation(direction));
         
@@ -30,11 +30,6 @@ public class ProjectileService : IProjectileService
         {
             projectileComponent.Initialize(damage);
         }
-        
-        var rb = projectileGO.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.linearVelocity = direction * speed;
-        }
+        return projectileGO;
     }
 } 

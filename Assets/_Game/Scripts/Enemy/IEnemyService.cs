@@ -14,4 +14,5 @@ public interface IEnemyService
     Enemy GetClosestEnemy(Vector3 position);    
     Enemy GetEnemyByView(IEnemyView view);    
     Vector3 GetEnemyPosition(Enemy enemy);
+    IEnemyView GetEnemyView(Enemy enemy);
 } 

@@ -10,6 +10,11 @@ public interface ICarView
     float MaxSteerAngle { get; }
     Vector3 WheelSpinAxis { get; }
     IReadOnlyList<Transform> CharacterPivots { get; }
+    Transform SteeringWheelPoint { get; }
+    Transform SteeringWheel { get; }
+    float MaxSteeringWheelAngle { get; }
+    float SteeringWheelSmoothSpeed { get; }
+    float SteerPivotSmoothSpeed { get; }
     Transform CarBody { get; }
     float MaxLeanAngle { get; }
     float LeanSpring { get; }

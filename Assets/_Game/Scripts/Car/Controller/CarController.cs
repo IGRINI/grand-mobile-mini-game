@@ -17,12 +17,12 @@ public class CarController : ITickable, IDisposable
     private float _pitchVelocity;
     private readonly IHealthService _healthService;
     private IHealth _health;
-    private readonly float _initialHealth;
+    private float _currentWheelAngle;
+    private float _currentSteerAngle;
 
     public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, float initialHealth)
     {
         _healthService = healthService;
-        _initialHealth = initialHealth;
         _model = model;
         _view = view;
         _input = input;
@@ -41,6 +41,12 @@ public class CarController : ITickable, IDisposable
     private void UpdateCar(float deltaTime)
     {
         var moveDirection = _input.MoveDirection;
+        if (_view.SteeringWheel != null)
+        {
+            float targetAngle = moveDirection.x * _view.MaxSteeringWheelAngle;
+            _currentWheelAngle = Mathf.MoveTowards(_currentWheelAngle, targetAngle, _view.SteeringWheelSmoothSpeed * deltaTime);
+            _view.SteeringWheel.localRotation = Quaternion.Euler(0f, 0f, -_currentWheelAngle);
+        }
         float targetLeanAngle = 0f;
         float targetPitchAngle = 0f;
         
@@ -61,7 +67,13 @@ public class CarController : ITickable, IDisposable
 
         if (moveDirection.sqrMagnitude > 0.01f && Mathf.Abs(_model.CurrentSpeed) >= _model.MinSpeedToTurn)
         {
-            Vector3 targetDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            Vector3 inputDir = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            if (_model.CurrentSpeed < 0f)
+            {
+                inputDir.x = -inputDir.x;
+                inputDir.z = -inputDir.z;
+            }
+            Vector3 targetDirection = inputDir;
             Vector3 currentForward = _view.Transform.forward;
             
             float angleDifference = Vector3.SignedAngle(currentForward, targetDirection, Vector3.up);
@@ -71,18 +83,18 @@ public class CarController : ITickable, IDisposable
             
             float maxTurnThisFrame = currentTurnRate * deltaTime;
             float actualTurn = Mathf.Clamp(angleDifference, -maxTurnThisFrame, maxTurnThisFrame);
-            
             Vector3 rearAxisPos = _view.RearAxisCenter.position;
             _view.Transform.RotateAround(rearAxisPos, Vector3.up, actualTurn);
             
-            float steerAngle = Mathf.Clamp(angleDifference / 45f, -1f, 1f) * _maxSteerAngle;
+            float steerAngleRaw = Mathf.Clamp(angleDifference / 45f, -1f, 1f) * _maxSteerAngle;
             if (_model.CurrentSpeed < 0f)
-                steerAngle = -steerAngle;
+                steerAngleRaw = -steerAngleRaw;
             if (_steerPivots != null)
             {
+                _currentSteerAngle = Mathf.MoveTowards(_currentSteerAngle, steerAngleRaw, _view.SteerPivotSmoothSpeed * deltaTime);
                 foreach (var pivot in _steerPivots)
                 {
-                    pivot.localRotation = Quaternion.Euler(0, steerAngle, 0);
+                    pivot.localRotation = Quaternion.Euler(0, _currentSteerAngle, 0);
                 }
             }
 
@@ -94,9 +106,10 @@ public class CarController : ITickable, IDisposable
         {
             if (_steerPivots != null)
             {
+                _currentSteerAngle = Mathf.MoveTowards(_currentSteerAngle, 0f, _view.SteerPivotSmoothSpeed * deltaTime);
                 foreach (var pivot in _steerPivots)
                 {
-                    pivot.localRotation = Quaternion.Slerp(pivot.localRotation, Quaternion.identity, deltaTime * 5f);
+                    pivot.localRotation = Quaternion.Euler(0, _currentSteerAngle, 0);
                 }
             }
         }

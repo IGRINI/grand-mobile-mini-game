@@ -55,9 +55,9 @@ public class ProjectilePool : IFixedTickable
         projectile.SetActive(false);
         string key = GetPrefabKey(projectile);
         
-        if (!string.IsNullOrEmpty(key) && _pools.ContainsKey(key))
+        if (!string.IsNullOrEmpty(key) && _pools.TryGetValue(key, out var pool))
         {
-            _pools[key].Enqueue(projectile);
+            pool.Enqueue(projectile);
         }
         else
         {

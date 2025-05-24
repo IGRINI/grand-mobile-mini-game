@@ -28,6 +28,9 @@ public class CharacterService : ICharacterService, IInitializable
         {
             _selected = _characters[0];
             SeatCharacter(0, _selected);
+            SeatCharacter(1, _selected);
+            SeatCharacter(2, _selected);
+            SeatCharacter(3, _selected);
         }
     }
 
@@ -51,5 +54,6 @@ public class CharacterService : ICharacterService, IInitializable
         instance.transform.localRotation = Quaternion.identity;
         var view = instance.GetComponent<ICharacterView>();
         view?.Initialize(character);
+        view?.SetSeatIndex(slotIndex);
     }
 } 

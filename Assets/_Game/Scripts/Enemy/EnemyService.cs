@@ -96,6 +96,13 @@ public class EnemyService : IEnemyService
         return Vector3.zero;
     }
 
+    public IEnemyView GetEnemyView(Enemy enemy)
+    {
+        if (enemy != null && _enemyViews.TryGetValue(enemy, out var view))
+            return view;
+        return null;
+    }
+
     private void OnEnemyDied(Enemy enemy)
     {
         EnemyDied?.Invoke(enemy);

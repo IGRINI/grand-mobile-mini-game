@@ -600,7 +600,7 @@ MonoBehaviour:
   fullAimTarget: {fileID: 5721447233081561335}
   turnThresholdAngle: 60
   turnRotationSpeed: 180
-  aimTargetDistance: 0.5
+  aimTargetDistance: 0.7
   aimTargetHeightOffset: 1.462
   animator: {fileID: 3474972699067534431}
   hitTarget: {fileID: 6841691472665394091}

@@ -20,6 +20,11 @@ public class CarView : MonoBehaviour, ICarView
     [SerializeField] private float accelerationPitchFactor = 8f;
     [SerializeField] private float maxPitchAngle = 10f;
     [SerializeField] private Transform hitTarget;
+    [SerializeField] private Transform steeringWheelPoint;
+    [SerializeField] private Transform steeringWheel;
+    [SerializeField] private float maxSteeringWheelAngle = 90f;
+    [SerializeField] private float steeringWheelSmoothSpeed = 5f;
+    [SerializeField] private float steerPivotSmoothSpeed = 5f;
     public IReadOnlyList<Transform> Wheels => wheels;
     public IReadOnlyList<Transform> SteerPivots => steerPivots;
     public Transform RearAxisCenter => rearAxisCenter;
@@ -36,4 +41,9 @@ public class CarView : MonoBehaviour, ICarView
     public float AccelerationPitchFactor => accelerationPitchFactor;
     public float MaxPitchAngle => maxPitchAngle;
     public Transform HitTarget => hitTarget;
+    public Transform SteeringWheelPoint => steeringWheelPoint;
+    public Transform SteeringWheel => steeringWheel != null ? steeringWheel : steeringWheelPoint;
+    public float MaxSteeringWheelAngle => maxSteeringWheelAngle;
+    public float SteeringWheelSmoothSpeed => steeringWheelSmoothSpeed;
+    public float SteerPivotSmoothSpeed => steerPivotSmoothSpeed;
 } 

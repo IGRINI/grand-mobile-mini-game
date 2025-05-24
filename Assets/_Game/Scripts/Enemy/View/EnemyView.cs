@@ -54,7 +54,7 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
     {
         _model = enemy;
         gameObject.name = enemy.Name;
-        WeaponSpawnHelper.SpawnWeapon(weaponPivot, enemy.DefaultWeapon);
+        _weaponView = WeaponSpawnHelper.SpawnWeapon(weaponPivot, enemy.DefaultWeapon);
         enemy.Health.HealthChanged += OnHealthChanged;
         UpdateHealthBar(enemy.Health.HealthPercent);
         
@@ -73,11 +73,8 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
             _behavior.SetHandTargets(leftHandTarget, rightHandTarget);
         }
         
-        _weaponView = GetComponentInChildren<IWeaponView>();
         if (_weaponView != null)
-        {
             _behavior.SetWeaponView(_weaponView);
-        }
         
         _behavior.SetTurnParameters(turnThresholdAngle, turnRotationSpeed);
         _behavior.SetAimTargetDistance(aimTargetDistance);
@@ -90,7 +87,7 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         _fadingIn = false;
         _constraintTimer = 0f;
         _firstShotTimer = 0f;
-        _firstShotAllowed = false;
+        _firstShotAllowed = true;
         _previousPosition = transform.position;
     }
 
@@ -195,6 +192,12 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         transform.position = position;
         transform.rotation = rotation;
         gameObject.SetActive(true);
+        if (weaponPivot != null && _model != null)
+        {
+            _weaponView = WeaponSpawnHelper.SpawnWeapon(weaponPivot, _model.DefaultWeapon);
+            if (_weaponView != null)
+                _behavior.SetWeaponView(_weaponView);
+        }
     }
 
     public void OnDespawned()

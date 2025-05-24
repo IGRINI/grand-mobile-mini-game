@@ -27,32 +27,6 @@ public class Projectile : MonoBehaviour
         _creationTime = Time.time;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        var enemyView = other.GetComponent<IEnemyView>();
-        if (enemyView != null)
-        {
-            var enemy = FindEnemyByView(enemyView);
-            if (enemy != null)
-            {
-                _healthService.DamageEntity(enemy, _damage);
-                ReturnToPool();
-            }
-            return;
-        }
-        
-        var characterView = other.GetComponent<ICharacterView>();
-        if (characterView != null)
-        {
-            var carController = other.GetComponentInParent<CarController>();
-            if (carController != null)
-            {
-                _healthService.DamageEntity(carController, _damage);
-                ReturnToPool();
-            }
-        }
-    }
-
     public void ReturnToPool()
     {
         var poolable = GetComponent<PoolableProjectile>();
