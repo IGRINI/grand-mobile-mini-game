@@ -9,6 +9,9 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
     private IEnemyBehavior _behavior;
     private ICarView _carView;
     private IAttackSystem _attackSystem;
+    private ICharacterTargetSelector _characterTargetSelector;
+    private ICharacterService _characterService;
+    private CarController _carController;
     private IWeaponView _weaponView;
     
     [SerializeField] private Transform weaponPivot;
@@ -37,6 +40,9 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
     private float _constraintTimer;
     private float _firstShotTimer;
     private bool _firstShotAllowed;
+    private HittableEnemy _hittableEnemy;
+    private float _targetUpdateTimer;
+    private const float TARGET_UPDATE_INTERVAL = 0.5f;
 
     public Transform Transform => transform;
     public GameObject GameObject => gameObject;
@@ -44,10 +50,13 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
     public Transform HitTarget => hitTarget;
 
     [Inject]
-    public void Construct(ICarView carView, IAttackSystem attackSystem)
+    public void Construct(ICarView carView, CarController carController, IAttackSystem attackSystem, ICharacterTargetSelector characterTargetSelector, ICharacterService characterService)
     {
         _carView = carView;
+        _carController = carController;
         _attackSystem = attackSystem;
+        _characterTargetSelector = characterTargetSelector;
+        _characterService = characterService;
     }
 
     public void Initialize(Enemy enemy)
@@ -58,8 +67,15 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         enemy.Health.HealthChanged += OnHealthChanged;
         UpdateHealthBar(enemy.Health.HealthPercent);
         
+        _hittableEnemy = GetComponent<HittableEnemy>();
+        if (_hittableEnemy != null)
+        {
+            _hittableEnemy.SetEnemy(enemy);
+        }
+        
         _behavior = new FollowPlayerAgentBehavior();
-        var aimPoint = (_carView != null && _carView.HitTarget != null) ? _carView.HitTarget : _carView?.Transform;
+        var aimPoint = _characterTargetSelector?.GetBestCharacterTarget(transform.position) ?? 
+                      ((_carView != null && _carView.HitTarget != null) ? _carView.HitTarget : _carView?.Transform);
         _behavior.Initialize(_model, aimPoint);
         _behavior.SetTransform(transform);
         
@@ -88,12 +104,26 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         _constraintTimer = 0f;
         _firstShotTimer = 0f;
         _firstShotAllowed = true;
+        _targetUpdateTimer = 0f;
         _previousPosition = transform.position;
     }
 
     private void Update()
     {
         if (_model == null || !_model.IsAlive || _carView?.Transform == null) return;
+
+        if (_hittableEnemy != null && !_hittableEnemy.CanAct) return;
+
+        _targetUpdateTimer += Time.deltaTime;
+        if (_targetUpdateTimer >= TARGET_UPDATE_INTERVAL)
+        {
+            _targetUpdateTimer = 0f;
+            var newTarget = _characterTargetSelector?.GetBestCharacterTarget(transform.position);
+            if (newTarget != null)
+            {
+                _behavior.UpdateTarget(newTarget);
+            }
+        }
 
         _behavior.Update(Time.deltaTime);
         Vector3 currentPosition = transform.position;
@@ -153,12 +183,43 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
 
     private void PerformAttack()
     {
-        var targetPosition = (_carView.HitTarget != null) ? _carView.HitTarget.position : _carView.Transform.position;
+        var bestTarget = _characterTargetSelector?.GetBestCharacterTarget(transform.position);
+        var targetPosition = bestTarget?.position ?? 
+                           ((_carView.HitTarget != null) ? _carView.HitTarget.position : _carView.Transform.position);
+        
+        object targetEntity = null;
+        if (bestTarget != null)
+        {
+            var characterView = bestTarget.GetComponent<ICharacterView>();
+            if (characterView != null)
+            {
+                targetEntity = GetCharacterFromView(characterView);
+            }
+            else if (bestTarget == _carView?.HitTarget)
+            {
+                targetEntity = _carController;
+            }
+        }
         
         if (_attackSystem.CanAttack(transform, targetPosition, _model.DefaultWeapon))
         {
-            _attackSystem.Attack(transform, _weaponView, targetPosition, _model.DefaultWeapon, _carView);
+            _attackSystem.Attack(transform, _weaponView, targetPosition, _model.DefaultWeapon, targetEntity);
         }
+    }
+    
+    private Character GetCharacterFromView(ICharacterView characterView)
+    {
+        if (_characterService != null)
+        {
+            foreach (var character in _characterService.GetAllCharacters())
+            {
+                if (_characterService.GetCharacterView(character) == characterView)
+                {
+                    return character;
+                }
+            }
+        }
+        return null;
     }
 
     public void UpdateHealthBar(float healthPercent)
@@ -185,6 +246,11 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         {
             _model.Health.HealthChanged -= OnHealthChanged;
         }
+        
+        if (_hittableEnemy != null)
+        {
+            _hittableEnemy.OnCleanup();
+        }
     }
 
     public void OnSpawned(Vector3 position, Quaternion rotation)
@@ -192,6 +258,11 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         transform.position = position;
         transform.rotation = rotation;
         gameObject.SetActive(true);
+        if (_hittableEnemy != null)
+        {
+            _hittableEnemy.OnRespawn();
+        }
+
         if (weaponPivot != null && _model != null)
         {
             _weaponView = WeaponSpawnHelper.SpawnWeapon(weaponPivot, _model.DefaultWeapon);
@@ -202,6 +273,10 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
 
     public void OnDespawned()
     {
+        if (_hittableEnemy != null)
+        {
+            _hittableEnemy.OnCleanup();
+        }
         gameObject.SetActive(false);
     }
 }

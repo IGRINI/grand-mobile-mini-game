@@ -25,4 +25,7 @@ public interface ICarView
     float AccelerationPitchFactor { get; }
     float MaxPitchAngle { get; }
     Transform HitTarget { get; }
+    float CollisionRadius { get; }
+    Vector3 CollisionSize { get; }
+    Vector3 CollisionCenterOffset { get; }
 } 

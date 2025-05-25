@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
+using System;
+using Object = UnityEngine.Object;
 
 public class CharacterService : ICharacterService, IInitializable
 {
@@ -8,6 +10,9 @@ public class CharacterService : ICharacterService, IInitializable
     private Character _selected;
     private readonly ICarView _carView;
     private readonly DiContainer _diContainer;
+    private IHealthService _healthService;
+    private TeamHealthUI _teamHealthUI;
+    private readonly Dictionary<Character, ICharacterView> _characterViews = new();
 
     public CharacterService(CharacterData[] configs, ICarView carView, DiContainer container)
     {
@@ -17,6 +22,13 @@ public class CharacterService : ICharacterService, IInitializable
         {
             _characters.Add(new Character(config));
         }
+    }
+
+    [Inject]
+    public void Construct(IHealthService healthService, TeamHealthUI teamHealthUI)
+    {
+        _healthService = healthService;
+        _teamHealthUI = teamHealthUI;
     }
 
     public IReadOnlyList<Character> Characters => _characters;
@@ -29,8 +41,6 @@ public class CharacterService : ICharacterService, IInitializable
             _selected = _characters[0];
             SeatCharacter(0, _selected);
             SeatCharacter(1, _selected);
-            SeatCharacter(2, _selected);
-            SeatCharacter(3, _selected);
         }
     }
 
@@ -55,5 +65,31 @@ public class CharacterService : ICharacterService, IInitializable
         var view = instance.GetComponent<ICharacterView>();
         view?.Initialize(character);
         view?.SetSeatIndex(slotIndex);
+        
+        _characterViews[character] = view;
+        
+        if (_healthService != null && _teamHealthUI != null)
+        {
+            _healthService.RegisterEntity(character, character.Health);
+            if (slotIndex > 0)
+            {
+                _teamHealthUI.AddPassenger(character, character.Name);
+            }
+        }
+    }
+    
+    public IReadOnlyList<Character> GetAllCharacters()
+    {
+        return _characters;
+    }
+    
+    public ICharacterView GetCharacterView(Character character)
+    {
+        return _characterViews.TryGetValue(character, out var view) ? view : null;
+    }
+    
+    public bool IsDriver(Character character)
+    {
+        return character == _selected && _characters.IndexOf(character) == 0;
     }
 } 

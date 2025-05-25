@@ -27,6 +27,11 @@ public class FollowPlayerAgentBehavior : IEnemyBehavior
         _lastAttackTime = 0f;
         _pathUpdateTimer = 0f;
     }
+    
+    public void UpdateTarget(Transform newTarget)
+    {
+        _target = newTarget;
+    }
 
     public void SetTransform(Transform transform)
     {

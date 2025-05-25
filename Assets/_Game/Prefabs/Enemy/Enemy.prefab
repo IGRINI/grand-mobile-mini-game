@@ -553,6 +553,7 @@ GameObject:
   - component: {fileID: 7083925423297308625}
   - component: {fileID: 5927272928121824622}
   - component: {fileID: 6956668145339057886}
+  - component: {fileID: 2171080506591761058}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -629,6 +630,28 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &2171080506591761058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202920299948734885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae64b80819d86354386193e382228419, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HittableEnemy
+  hitForce: 10
+  radius: 0.5
+  centerOffset: {x: 0, y: 0.06, z: 0}
+  knockbackDuration: 1
+  deathAnimationDuration: 2
+  sinkDistance: 2
+  sinkDuration: 1
+  stunDuration: 2
+  _animator: {fileID: 3474972699067534431}
+  _aimRig: {fileID: 2398937515955042414}
 --- !u!1 &3435741412298160614
 GameObject:
   m_ObjectHideFlags: 0

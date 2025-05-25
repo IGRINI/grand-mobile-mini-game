@@ -8,6 +8,7 @@ public class EnemyInstaller : MonoInstaller
     public override void InstallBindings()
     {
         Container.BindInstance(enemyConfigs).AsSingle();
+        Container.Bind<IEnemyHealthHandler>().To<EnemyHealthHandler>().AsSingle();
         Container.BindInterfacesAndSelfTo<EnemyService>().AsSingle().NonLazy();
     }
 } 

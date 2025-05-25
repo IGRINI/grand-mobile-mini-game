@@ -13,15 +13,24 @@ public class CarInstaller : MonoInstaller
     [SerializeField] private float minSpeedToTurn = 1f;
     [SerializeField] private float maxTurnRate = 270f;
     [SerializeField] private float turnRateSpeedFactor = 0.5f;
+    [SerializeField] private float baseCollisionDamage = 25f;
+    [SerializeField] private float selfDamageMultiplier = 0.3f;
+    [SerializeField] private float speedReductionPerEnemy = 2f;
     [SerializeField] private float initialHealth = 100f;
 
     public override void InstallBindings()
     {
         Container.BindInstance(inputAsset).AsSingle();
-        Container.Bind<ICarModel>().To<CarModel>().AsSingle().WithArguments(new object[]{acceleration, brakeForce, maxSpeed, maxReverseSpeed, turnSpeed, minSpeedToTurn, maxTurnRate, turnRateSpeedFactor});
+        Container.Bind<ICarModel>().To<CarModel>().AsSingle().WithArguments(new object[]{acceleration, brakeForce, maxSpeed, maxReverseSpeed, turnSpeed, minSpeedToTurn, maxTurnRate, turnRateSpeedFactor, baseCollisionDamage, selfDamageMultiplier, speedReductionPerEnemy});
         Container.BindInstance(initialHealth).WhenInjectedInto<CarController>();
         Container.Bind<ICarView>().To<CarView>().FromComponentInHierarchy().AsSingle();
         Container.BindInterfacesAndSelfTo<InputService>().AsSingle().NonLazy();
-        Container.BindInterfacesTo<CarController>().AsSingle().NonLazy();
+        Container.Bind<IObstacleService>().To<ObstacleService>().AsSingle();
+        Container.Bind<ICollisionDetector>().FromMethod(ctx => ctx.Container.Resolve<IObstacleService>().GetCollisionDetector()).AsSingle();
+        Container.Bind<IEnemyDetector>().To<EnemyDetector>().AsSingle();
+        Container.Bind<ICarDamageDealer>().To<CarDamageDealer>().AsSingle();
+        Container.Bind<ITargetSelector>().To<TargetSelector>().AsSingle();
+        Container.Bind<ICharacterTargetSelector>().To<CharacterTargetSelector>().AsSingle();
+        Container.BindInterfacesAndSelfTo<CarController>().AsSingle().NonLazy();
     }
 } 

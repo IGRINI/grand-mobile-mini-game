@@ -9,4 +9,7 @@ public interface ICarModel
     float CurrentSpeed { get; set; }
     float MaxTurnRate { get; }
     float TurnRateSpeedFactor { get; }
+    float BaseCollisionDamage { get; }
+    float SelfDamageMultiplier { get; }
+    float SpeedReductionPerEnemy { get; }
 } 

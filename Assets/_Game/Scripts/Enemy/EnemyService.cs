@@ -106,6 +106,5 @@ public class EnemyService : IEnemyService
     private void OnEnemyDied(Enemy enemy)
     {
         EnemyDied?.Invoke(enemy);
-        DespawnEnemy(enemy);
     }
 }

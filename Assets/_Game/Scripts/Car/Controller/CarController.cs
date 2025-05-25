@@ -3,7 +3,7 @@ using UnityEngine;
 using Zenject;
 using System.Collections.Generic;
 
-public class CarController : ITickable, IDisposable
+public class CarController : IFixedTickable, IDisposable
 {
     private readonly IReadOnlyList<Transform> _wheels;
     private readonly IReadOnlyList<Transform> _steerPivots;
@@ -19,8 +19,12 @@ public class CarController : ITickable, IDisposable
     private IHealth _health;
     private float _currentWheelAngle;
     private float _currentSteerAngle;
+    private readonly ICollisionDetector _collisionDetector;
+    private readonly CarCollisionEffect _collisionEffect;
+    private readonly ICarDamageDealer _damageDealer;
+    private readonly IEnemyDetector _enemyDetector;
 
-    public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, float initialHealth)
+    public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, ICollisionDetector collisionDetector, IEnemyDetector enemyDetector, float initialHealth)
     {
         _healthService = healthService;
         _model = model;
@@ -31,11 +35,15 @@ public class CarController : ITickable, IDisposable
         _maxSteerAngle = view.MaxSteerAngle;
         _health = new Health(initialHealth);
         _healthService.RegisterEntity(this, _health);
+        _collisionDetector = collisionDetector;
+        _collisionEffect = new CarCollisionEffect(view);
+        _damageDealer = new CarDamageDealer();
+        _enemyDetector = enemyDetector;
     }
 
-    public void Tick()
+    public void FixedTick()
     {
-        UpdateCar(Time.deltaTime);
+        UpdateCar(Time.fixedDeltaTime);
     }
 
     private void UpdateCar(float deltaTime)
@@ -114,11 +122,60 @@ public class CarController : ITickable, IDisposable
             }
         }
 
-        _view.Transform.position += _view.Transform.forward * _model.CurrentSpeed * deltaTime;
+        Vector3 offset = _view.Transform.rotation * _view.CollisionCenterOffset;
+        Vector3 currentCenter = _view.Transform.position + offset;
+        Vector3 targetCenter = currentCenter + _view.Transform.forward * _model.CurrentSpeed * deltaTime;
+        
+        bool hasObstacleCollision = false;
+        if (Mathf.Abs(_model.CurrentSpeed) > 0.01f)
+        {
+            hasObstacleCollision = _collisionDetector.CheckRectangleCollision(currentCenter, targetCenter, _view.CollisionSize, _view.Transform.rotation);
+        }
+        
+        var collidingEnemy = _enemyDetector.GetCollidingEnemy(targetCenter, _view.CollisionSize, _view.Transform.rotation);
+        
+        if (hasObstacleCollision)
+        {
+            var collidingObstacle = _collisionDetector.GetCollidingObstacleRectangle(targetCenter, _view.CollisionSize, _view.Transform.rotation);
+            Vector3 collisionNormal = _collisionDetector.GetRectangleCollisionNormal(targetCenter, _view.CollisionSize, _view.Transform.rotation);
+            
+            float impactSpeed = Mathf.Abs(_model.CurrentSpeed);
+            _collisionEffect.ApplyCollisionEffect(collisionNormal, _model.CurrentSpeed, _model.MaxSpeed);
+            
+            if (collidingObstacle is IDamageable damageable && damageable.CanTakeDamage)
+            {
+                float speedFactor = Mathf.Clamp01(impactSpeed / _model.MaxSpeed);
+                float buildingDamage = _model.BaseCollisionDamage * speedFactor;
+                damageable.TakeDamage(buildingDamage);
+                
+                float selfDamage = buildingDamage * _model.SelfDamageMultiplier;
+                _health.TakeDamage(selfDamage);
+            }
+            
+            _model.CurrentSpeed = 0f;
+        }
+        else if (collidingEnemy != null && collidingEnemy.CanBeHit)
+        {
+            Vector3 enemyPos = ((HittableEnemy)collidingEnemy).transform.position;
+            Vector3 hitDirection = (enemyPos - _view.Transform.position).normalized;
+            
+            collidingEnemy.OnHit(hitDirection, Mathf.Abs(_model.CurrentSpeed));
+            _damageDealer.DealDamage(collidingEnemy, _model.CurrentSpeed, _model.MaxSpeed, _model.BaseCollisionDamage);
+            
+            _model.CurrentSpeed = Mathf.Max(0f, Mathf.Abs(_model.CurrentSpeed) - _model.SpeedReductionPerEnemy) * Mathf.Sign(_model.CurrentSpeed);
+            
+            _view.Transform.position = targetCenter - offset;
+        }
+        else
+        {
+            _view.Transform.position = targetCenter - offset;
+        }
 
+        _collisionEffect.UpdateCollisionEffect(deltaTime);
+        
         float speedChange = (_model.CurrentSpeed - previousSpeed) / deltaTime;
         float basePitch = Mathf.Sign(_model.CurrentSpeed) * _view.BasePitchAngle;
-        targetPitchAngle = basePitch - speedChange * _view.AccelerationPitchFactor;
+        targetPitchAngle = basePitch - speedChange * _view.AccelerationPitchFactor + _collisionEffect.GetCollisionPitch();
         targetPitchAngle = Mathf.Clamp(targetPitchAngle, -_view.MaxPitchAngle, _view.MaxPitchAngle);
 
         if (_wheels != null)

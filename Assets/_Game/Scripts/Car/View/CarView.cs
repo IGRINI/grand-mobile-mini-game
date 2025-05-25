@@ -25,6 +25,9 @@ public class CarView : MonoBehaviour, ICarView
     [SerializeField] private float maxSteeringWheelAngle = 90f;
     [SerializeField] private float steeringWheelSmoothSpeed = 5f;
     [SerializeField] private float steerPivotSmoothSpeed = 5f;
+    [SerializeField] private float collisionRadius = 1f;
+    [SerializeField] private Vector3 collisionSize = new Vector3(2f, 1f, 4f);
+    [SerializeField] private Vector3 collisionCenterOffset = Vector3.zero;
     public IReadOnlyList<Transform> Wheels => wheels;
     public IReadOnlyList<Transform> SteerPivots => steerPivots;
     public Transform RearAxisCenter => rearAxisCenter;
@@ -46,4 +49,29 @@ public class CarView : MonoBehaviour, ICarView
     public float MaxSteeringWheelAngle => maxSteeringWheelAngle;
     public float SteeringWheelSmoothSpeed => steeringWheelSmoothSpeed;
     public float SteerPivotSmoothSpeed => steerPivotSmoothSpeed;
+    public float CollisionRadius => collisionRadius;
+    public Vector3 CollisionSize => collisionSize;
+    public Vector3 CollisionCenterOffset => collisionCenterOffset;
+    
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(collisionCenterOffset, collisionSize);
+        Gizmos.matrix = Matrix4x4.identity;
+        
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position + collisionCenterOffset, collisionRadius);
+    }
+    
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(0f, 1f, 0f, 0.3f);
+        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        Gizmos.DrawCube(collisionCenterOffset, collisionSize);
+        Gizmos.matrix = Matrix4x4.identity;
+        
+        Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
+        Gizmos.DrawSphere(transform.position + collisionCenterOffset, collisionRadius);
+    }
 } 

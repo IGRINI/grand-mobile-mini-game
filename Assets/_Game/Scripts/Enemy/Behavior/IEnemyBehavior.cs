@@ -15,4 +15,5 @@ public interface IEnemyBehavior
     void ResetAttackCooldown();
     void SetAimTargetHeightOffset(float offset);
     void SetFullAimTarget(Transform fullAimTarget);
+    void UpdateTarget(Transform newTarget);
 } 

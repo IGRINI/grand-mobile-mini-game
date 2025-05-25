@@ -8,6 +8,7 @@ public class CharacterView : MonoBehaviour, ICharacterView
     private int _seatIndex = -1;
     private IEnemyService _enemyService;
     private IAttackSystem _attackSystem;
+    private ITargetSelector _targetSelector;
     private IWeaponView _weaponView;
     private float _lastAttackTime;
     private float _constraintTimer;
@@ -41,10 +42,11 @@ public class CharacterView : MonoBehaviour, ICharacterView
     public Transform ModelTransform => modelTransform;
 
     [Inject]
-    public void Construct(IEnemyService enemyService, IAttackSystem attackSystem)
+    public void Construct(IEnemyService enemyService, IAttackSystem attackSystem, ITargetSelector targetSelector)
     {
         _enemyService = enemyService;
         _attackSystem = attackSystem;
+        _targetSelector = targetSelector;
     }
 
     public void Initialize(Character model)
@@ -80,7 +82,7 @@ public class CharacterView : MonoBehaviour, ICharacterView
     {
         if (_model == null || !_model.Health.IsAlive) return;
 
-        var target = _enemyService.GetClosestEnemy(transform.position);
+        var target = _targetSelector.GetClosestAliveEnemy(transform.position);
         Vector3 targetPos = Vector3.zero; 
         bool inRange = false;
         if (target != null)

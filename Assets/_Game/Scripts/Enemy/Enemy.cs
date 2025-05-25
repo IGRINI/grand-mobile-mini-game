@@ -21,14 +21,4 @@ public class Enemy
     public WeaponData DefaultWeapon => Data.DefaultWeapon;
     public bool IsAlive => Health.IsAlive;
     public float CurrentHealth => Health.CurrentHealth;
-
-    public void TakeDamage(float damage)
-    {
-        Health.TakeDamage(damage);
-    }
-
-    public void Heal(float amount)
-    {
-        Health.Heal(amount);
-    }
 } 

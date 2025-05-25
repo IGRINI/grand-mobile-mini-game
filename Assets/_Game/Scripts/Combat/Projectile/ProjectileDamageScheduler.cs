@@ -25,8 +25,10 @@ public class ProjectileDamageScheduler : MonoBehaviour
     private IEnumerator DoDamageAfterDelay()
     {
         yield return new WaitForSeconds(_delay);
-        if (_target != null)
+        if (_target != null && _healthService != null)
+        {
             _healthService.DamageEntity(_target, _damage);
+        }
         var poolable = GetComponent<PoolableProjectile>();
         if (poolable != null)
             poolable.ReturnToPool();
