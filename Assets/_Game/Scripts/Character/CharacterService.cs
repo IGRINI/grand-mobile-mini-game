@@ -39,8 +39,18 @@ public class CharacterService : ICharacterService, IInitializable
         if (_characters.Count > 0)
         {
             _selected = _characters[0];
-            SeatCharacter(0, _selected);
-            SeatCharacter(1, _selected);
+            SeatCharacter(0, _characters[0]); // Водитель
+            if (_characters.Count > 1)
+            {
+                SeatCharacter(1, _characters[1]); // Пассажир
+            }
+            else
+            {
+                // Создаем отдельный экземпляр персонажа для пассажира
+                var passengerCharacter = new Character(_characters[0].Data);
+                _characters.Add(passengerCharacter);
+                SeatCharacter(1, passengerCharacter); // Пассажир
+            }
         }
     }
 
@@ -90,6 +100,12 @@ public class CharacterService : ICharacterService, IInitializable
     
     public bool IsDriver(Character character)
     {
-        return character == _selected && _characters.IndexOf(character) == 0;
+        // Водитель - это персонаж в слоте 0
+        var characterView = GetCharacterView(character);
+        if (characterView != null)
+        {
+            return characterView.SeatIndex == 0;
+        }
+        return character == _selected;
     }
 } 

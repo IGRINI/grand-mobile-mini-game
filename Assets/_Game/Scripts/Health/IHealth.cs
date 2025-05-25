@@ -13,4 +13,5 @@ public interface IHealth
     void TakeDamage(float damage);
     void Heal(float amount);
     void SetMaxHealth(float maxHealth);
+    void SetDamageModifier(System.Func<float, float> modifier);
 } 

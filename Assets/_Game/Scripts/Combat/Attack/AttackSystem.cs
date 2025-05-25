@@ -5,19 +5,33 @@ public class AttackSystem : IAttackSystem
 {
     private readonly IProjectileService _projectileService;
     private readonly IHealthService _healthService;
+    private IUpgradeEffectProvider _upgradeEffectProvider;
 
     public AttackSystem(IProjectileService projectileService, IHealthService healthService)
     {
         _projectileService = projectileService;
         _healthService = healthService;
     }
+    
+    [Inject]
+    public void Construct(IUpgradeEffectProvider upgradeEffectProvider)
+    {
+        _upgradeEffectProvider = upgradeEffectProvider;
+    }
 
     public bool CanAttack(Transform attacker, Vector3 targetPosition, WeaponData weaponData)
     {
         if (attacker == null || weaponData == null) return false;
         
+        float range = weaponData.Range;
+        if (_upgradeEffectProvider != null)
+        {
+            float rangeMultiplier = _upgradeEffectProvider.GetSpeedMultiplier(UpgradeType.IncreaseRange);
+            range *= rangeMultiplier;
+        }
+        
         float sqrDistance = (targetPosition - attacker.position).sqrMagnitude;
-        float sqrRange = weaponData.Range * weaponData.Range;
+        float sqrRange = range * range;
         
         return sqrDistance <= sqrRange;
     }
@@ -31,11 +45,27 @@ public class AttackSystem : IAttackSystem
         var spawnPos = spawnPoint.position;
         var direction = (targetPosition - spawnPos).normalized;
         
+        float damage = weaponData.Damage;
+        
+        if (_upgradeEffectProvider != null)
+        {
+            float damageMultiplier = _upgradeEffectProvider.GetDamageMultiplier(UpgradeType.IncreaseCharacterDamage);
+            damage *= damageMultiplier;
+            
+            float critChance = _upgradeEffectProvider.GetCriticalChance();
+            if (Random.Range(0f, 100f) < critChance)
+            {
+                float critMultiplier = _upgradeEffectProvider.GetCriticalDamageMultiplier();
+                damage *= critMultiplier;
+                Debug.Log($"Критический удар! Урон: {damage:F1}");
+            }
+        }
+        
         var projectileGO = _projectileService.FireProjectile(
             spawnPos,
             direction,
             weaponData.ProjectileSpeed,
-            weaponData.Damage,
+            damage,
             weaponData.ProjectilePrefab,
             weaponData.ProjectileLifetime
         );
@@ -44,6 +74,6 @@ public class AttackSystem : IAttackSystem
         float travelTime = distance / weaponData.ProjectileSpeed;
         var scheduler = projectileGO.AddComponent<ProjectileDamageScheduler>();
         scheduler.Construct(_healthService);
-        scheduler.Initialize(target, weaponData.Damage, travelTime);
+        scheduler.Initialize(target, damage, travelTime);
     }
 } 

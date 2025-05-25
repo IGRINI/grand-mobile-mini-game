@@ -24,7 +24,7 @@ public class CarController : IFixedTickable, IDisposable
     private readonly ICarDamageDealer _damageDealer;
     private readonly IEnemyDetector _enemyDetector;
 
-    public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, ICollisionDetector collisionDetector, IEnemyDetector enemyDetector, float initialHealth)
+    public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, ICollisionDetector collisionDetector, IEnemyDetector enemyDetector, ICarDamageDealer damageDealer, float initialHealth)
     {
         _healthService = healthService;
         _model = model;
@@ -37,7 +37,7 @@ public class CarController : IFixedTickable, IDisposable
         _healthService.RegisterEntity(this, _health);
         _collisionDetector = collisionDetector;
         _collisionEffect = new CarCollisionEffect(view);
-        _damageDealer = new CarDamageDealer();
+        _damageDealer = damageDealer;
         _enemyDetector = enemyDetector;
     }
 

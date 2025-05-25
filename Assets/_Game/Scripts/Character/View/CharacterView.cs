@@ -40,6 +40,7 @@ public class CharacterView : MonoBehaviour, ICharacterView
     public Transform HitTarget => hitTarget;
     public Animator Animator => animator;
     public Transform ModelTransform => modelTransform;
+    public int SeatIndex => _seatIndex;
 
     [Inject]
     public void Construct(IEnemyService enemyService, IAttackSystem attackSystem, ITargetSelector targetSelector)
@@ -244,6 +245,13 @@ public class CharacterView : MonoBehaviour, ICharacterView
     private bool CanAttackNow()
     {
         var fireRate = _model.DefaultWeapon?.FireRate ?? 1f;
+        
+        float fireRateMultiplier = UpgradeEffects.GetFireRateMultiplier();
+        fireRate *= fireRateMultiplier;
+        
+        float cooldownMultiplier = UpgradeEffects.GetWeaponCooldownMultiplier();
+        fireRate /= cooldownMultiplier;
+        
         var interval = 1f / fireRate;
         return _lastAttackTime >= interval;
     }

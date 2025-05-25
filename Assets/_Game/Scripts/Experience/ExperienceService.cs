@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Zenject;
+using Object = UnityEngine.Object;
 
 public class ExperienceService : IExperienceService, IInitializable, IDisposable
 {
@@ -50,7 +51,9 @@ public class ExperienceService : IExperienceService, IInitializable, IDisposable
     
     public void AddExperience(int amount, int enemyLevel = 1)
     {
-        _experienceSystem.AddExperience(amount, enemyLevel);
+        float multiplier = UpgradeEffects.GetExperienceMultiplier();
+        int adjustedAmount = Mathf.RoundToInt(amount * multiplier);
+        _experienceSystem.AddExperience(adjustedAmount, enemyLevel);
     }
     
     public void AddExperienceFromEnemy(Enemy enemy)

@@ -9,8 +9,7 @@ public class ExperienceUI : MonoBehaviour
     [Header("UI Elements")]
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private TextMeshProUGUI experienceText;
-    [SerializeField] private Slider experienceBar;
-    [SerializeField] private Image experienceBarFill;
+    [SerializeField] private Image experienceBar;
     [SerializeField] private GameObject levelUpNotification;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private GameObject experienceGainNotification;
@@ -84,7 +83,7 @@ public class ExperienceUI : MonoBehaviour
         
         if (experienceBar != null)
         {
-            experienceBar.value = _experienceService.ExperienceProgress;
+            experienceBar.fillAmount = _experienceService.ExperienceProgress;
         }
     }
     
@@ -116,7 +115,7 @@ public class ExperienceUI : MonoBehaviour
         if (experienceBar == null) return;
         
         _barTween?.Kill();
-        _barTween = experienceBar.DOValue(_experienceService.ExperienceProgress, barAnimationDuration)
+        _barTween = experienceBar.DOFillAmount(_experienceService.ExperienceProgress, barAnimationDuration)
             .SetEase(Ease.OutQuart);
     }
     
@@ -136,9 +135,9 @@ public class ExperienceUI : MonoBehaviour
     
     private void AnimateExperienceBar()
     {
-        if (experienceBarFill == null) return;
+        if (experienceBar == null) return;
         
-        experienceBarFill.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f, 5, 0.5f);
+        experienceBar.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f, 5, 0.5f);
     }
     
     private void ShowLevelUpNotification(int newLevel)

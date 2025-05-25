@@ -8,4 +8,5 @@ public interface ICharacterView
     Transform HitTarget { get; }
     Animator Animator { get; }
     Transform ModelTransform { get; }
+    int SeatIndex { get; }
 } 

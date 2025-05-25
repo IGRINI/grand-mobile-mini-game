@@ -194,11 +194,17 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
             if (characterView != null)
             {
                 targetEntity = GetCharacterFromView(characterView);
+                Debug.Log($"Враг атакует персонажа: {targetEntity?.GetType().Name ?? "null"}");
             }
             else if (bestTarget == _carView?.HitTarget)
             {
                 targetEntity = _carController;
+                Debug.Log($"Враг атакует машину: {targetEntity?.GetType().Name ?? "null"}");
             }
+        }
+        else
+        {
+            Debug.Log("Враг не нашел цель для атаки");
         }
         
         if (_attackSystem.CanAttack(transform, targetPosition, _model.DefaultWeapon))

@@ -27,7 +27,12 @@ public class ProjectileDamageScheduler : MonoBehaviour
         yield return new WaitForSeconds(_delay);
         if (_target != null && _healthService != null)
         {
+            Debug.Log($"Снаряд наносит урон {_damage:F1} цели: {_target.GetType().Name}");
             _healthService.DamageEntity(_target, _damage);
+        }
+        else
+        {
+            Debug.Log($"Снаряд не может нанести урон: target={_target}, healthService={_healthService}");
         }
         var poolable = GetComponent<PoolableProjectile>();
         if (poolable != null)

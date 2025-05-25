@@ -19,16 +19,27 @@ public class CharacterTargetSelector : ICharacterTargetSelector
         float driverSqrDistance = float.MaxValue;
         
         var characters = _characterService.GetAllCharacters();
+        Debug.Log($"CharacterTargetSelector: проверяем {characters.Count} персонажей");
         
         foreach (var character in characters)
         {
-            if (!character.Health.IsAlive) continue;
+            if (!character.Health.IsAlive) 
+            {
+                Debug.Log($"Персонаж {character.Name} мертв, пропускаем");
+                continue;
+            }
             
             var characterView = _characterService.GetCharacterView(character);
-            if (characterView?.HitTarget == null) continue;
+            if (characterView?.HitTarget == null) 
+            {
+                Debug.Log($"У персонажа {character.Name} нет HitTarget");
+                continue;
+            }
             
             bool isDriver = _characterService.IsDriver(character);
             var sqrDistance = (characterView.HitTarget.position - enemyPosition).sqrMagnitude;
+            
+            Debug.Log($"Персонаж {character.Name}: водитель={isDriver}, расстояние={Mathf.Sqrt(sqrDistance):F1}");
             
             if (isDriver)
             {
@@ -50,19 +61,23 @@ public class CharacterTargetSelector : ICharacterTargetSelector
         
         if (bestTarget != null)
         {
+            Debug.Log($"Выбрана цель: пассажир на расстоянии {Mathf.Sqrt(closestSqrDistance):F1}");
             return bestTarget;
         }
         
         if (driverTarget != null)
         {
+            Debug.Log($"Выбрана цель: водитель на расстоянии {Mathf.Sqrt(driverSqrDistance):F1}");
             return driverTarget;
         }
         
         if (_carView?.HitTarget != null)
         {
+            Debug.Log("Выбрана цель: машина");
             return _carView.HitTarget;
         }
         
+        Debug.Log("Цель не найдена");
         return null;
     }
 } 
