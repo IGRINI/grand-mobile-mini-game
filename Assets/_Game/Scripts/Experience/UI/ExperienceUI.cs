@@ -23,7 +23,8 @@ public class ExperienceUI : MonoBehaviour
     
     private IExperienceService _experienceService;
     private Tween _barTween;
-    
+    private Tween _punch; 
+
     [Inject]
     public void Construct(IExperienceService experienceService)
     {
@@ -116,7 +117,8 @@ public class ExperienceUI : MonoBehaviour
         
         _barTween?.Kill();
         _barTween = experienceBar.DOFillAmount(_experienceService.ExperienceProgress, barAnimationDuration)
-            .SetEase(Ease.OutQuart);
+            .SetEase(Ease.OutQuart)
+            .SetUpdate(true);
     }
     
     private void UpdateExperienceText()
@@ -136,8 +138,9 @@ public class ExperienceUI : MonoBehaviour
     private void AnimateExperienceBar()
     {
         if (experienceBar == null) return;
-        
-        experienceBar.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f, 5, 0.5f);
+        _punch?.Kill(true);
+        _punch = experienceBar.transform.DOPunchScale(Vector3.one * 0.1f, 0.3f, 5, 0.5f)
+            .SetUpdate(true);
     }
     
     private void ShowLevelUpNotification(int newLevel)
@@ -157,10 +160,11 @@ public class ExperienceUI : MonoBehaviour
         levelUpNotification.transform.localScale = Vector3.zero;
         
         var sequence = DOTween.Sequence();
-        sequence.Append(canvasGroup.DOFade(1f, 0.3f));
-        sequence.Join(levelUpNotification.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack));
+        sequence.Append(canvasGroup.DOFade(1f, 0.3f).SetUpdate(true));
+        sequence.Join(levelUpNotification.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true));
         sequence.AppendInterval(notificationDuration - 0.6f);
-        sequence.Append(canvasGroup.DOFade(0f, 0.3f));
+        sequence.Append(canvasGroup.DOFade(0f, 0.3f).SetUpdate(true));
+        sequence.SetUpdate(true);
         sequence.OnComplete(() => levelUpNotification.SetActive(false));
     }
     
@@ -181,11 +185,12 @@ public class ExperienceUI : MonoBehaviour
         experienceGainNotification.transform.localScale = Vector3.one * 0.8f;
         
         var sequence = DOTween.Sequence();
-        sequence.Append(canvasGroup.DOFade(1f, 0.2f));
-        sequence.Join(experienceGainNotification.transform.DOScale(1f, 0.2f).SetEase(Ease.OutBack));
+        sequence.Append(canvasGroup.DOFade(1f, 0.2f).SetUpdate(true));
+        sequence.Join(experienceGainNotification.transform.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true));
         sequence.AppendInterval(1f);
-        sequence.Append(canvasGroup.DOFade(0f, 0.3f));
-        sequence.Join(experienceGainNotification.transform.DOScale(0.8f, 0.3f));
+        sequence.Append(canvasGroup.DOFade(0f, 0.3f).SetUpdate(true));
+        sequence.Join(experienceGainNotification.transform.DOScale(0.8f, 0.3f).SetUpdate(true));
+        sequence.SetUpdate(true);
         sequence.OnComplete(() => experienceGainNotification.SetActive(false));
     }
 } 

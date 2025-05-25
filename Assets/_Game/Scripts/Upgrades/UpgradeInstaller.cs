@@ -10,7 +10,7 @@ public class UpgradeInstaller : MonoInstaller
         Container.Bind<UpgradeData[]>().FromInstance(availableUpgrades).AsSingle();
         Container.Bind<UpgradeEffectApplier>().AsSingle().NonLazy();
         Container.Bind<IUpgradeEffectProvider>().To<UpgradeEffectApplier>().FromResolve();
-        Container.Bind<IUpgradeService>().To<UpgradeService>().AsSingle();
+        Container.BindInterfacesAndSelfTo<UpgradeService>().AsSingle().NonLazy();
         Container.Bind<UpgradeEffectUpdater>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
     }
     

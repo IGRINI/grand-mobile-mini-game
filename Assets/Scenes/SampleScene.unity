@@ -25747,6 +25747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIInstaller
   _teamHealthUI: {fileID: 817720164}
+  _upgradeSelectionUI: {fileID: 1536965210}
 --- !u!114 &1079029091
 MonoBehaviour:
   m_ObjectHideFlags: 0

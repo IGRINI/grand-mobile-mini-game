@@ -95,6 +95,7 @@ public class ExperienceSystem
             int oldLevel = _currentLevel;
             _currentLevel = newLevel;
             
+            UnityEngine.Debug.Log($"ExperienceSystem: Повышение уровня! {oldLevel} -> {newLevel}");
             LevelUp?.Invoke(_currentLevel);
             LevelChanged?.Invoke(_currentLevel);
         }

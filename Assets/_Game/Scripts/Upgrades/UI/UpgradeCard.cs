@@ -119,11 +119,13 @@ public class UpgradeCard : MonoBehaviour
         _isHovered = true;
         
         transform.DOScale(_originalScale * hoverScale, animationDuration)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack)
+            .SetUpdate(true);
             
         if (cardBackground != null)
         {
-            cardBackground.DOColor(hoverColor, animationDuration);
+            cardBackground.DOColor(hoverColor, animationDuration)
+                .SetUpdate(true);
         }
     }
     
@@ -133,11 +135,13 @@ public class UpgradeCard : MonoBehaviour
         _isHovered = false;
         
         transform.DOScale(_originalScale, animationDuration)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack)
+            .SetUpdate(true);
             
         if (cardBackground != null)
         {
-            cardBackground.DOColor(_originalColor, animationDuration);
+            cardBackground.DOColor(_originalColor, animationDuration)
+                .SetUpdate(true);
         }
     }
     
@@ -151,20 +155,23 @@ public class UpgradeCard : MonoBehaviour
         canvasGroup.alpha = 0f;
         
         var sequence = DOTween.Sequence();
-        sequence.Append(transform.DOScale(_originalScale, 0.5f).SetEase(Ease.OutBack));
-        sequence.Join(canvasGroup.DOFade(1f, 0.3f));
+        sequence.Append(transform.DOScale(_originalScale, 0.5f).SetEase(Ease.OutBack).SetUpdate(true));
+        sequence.Join(canvasGroup.DOFade(1f, 0.3f).SetUpdate(true));
+        sequence.SetUpdate(true);
     }
     
     private void AnimateSelection()
     {
         var sequence = DOTween.Sequence();
-        sequence.Append(transform.DOScale(_originalScale * 1.1f, 0.1f));
-        sequence.Append(transform.DOScale(_originalScale * 0.9f, 0.1f));
-        sequence.Append(transform.DOScale(_originalScale, 0.1f));
+        sequence.Append(transform.DOScale(_originalScale * 1.1f, 0.1f).SetUpdate(true));
+        sequence.Append(transform.DOScale(_originalScale * 0.9f, 0.1f).SetUpdate(true));
+        sequence.Append(transform.DOScale(_originalScale, 0.1f).SetUpdate(true));
+        sequence.SetUpdate(true);
         
         if (cardBackground != null)
         {
             cardBackground.DOColor(Color.green, 0.3f)
+                .SetUpdate(true)
                 .OnComplete(() => cardBackground.color = _originalColor);
         }
     }

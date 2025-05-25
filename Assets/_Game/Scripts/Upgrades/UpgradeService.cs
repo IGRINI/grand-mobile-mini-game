@@ -24,7 +24,9 @@ public class UpgradeService : IUpgradeService, IInitializable, IDisposable
     
     public void Initialize()
     {
+        Debug.Log("UpgradeService.Initialize() вызван!");
         _experienceService.LevelUp += OnLevelUp;
+        Debug.Log("UpgradeService подписался на LevelUp события");
     }
     
     public void Dispose()
@@ -35,8 +37,11 @@ public class UpgradeService : IUpgradeService, IInitializable, IDisposable
     
     public void ShowUpgradeSelection()
     {
+        Debug.Log($"UpgradeService.ShowUpgradeSelection() вызван! Уровень игрока: {_experienceService.CurrentLevel}");
         var options = GenerateUpgradeOptions(_experienceService.CurrentLevel);
+        Debug.Log($"Сгенерировано {options.Length} вариантов апгрейдов");
         UpgradeOptionsAvailable?.Invoke(options);
+        Debug.Log("Событие UpgradeOptionsAvailable вызвано");
     }
     
     public void SelectUpgrade(UpgradeData upgradeData)
@@ -149,6 +154,7 @@ public class UpgradeService : IUpgradeService, IInitializable, IDisposable
     
     private void OnLevelUp(int newLevel)
     {
+        Debug.Log($"UpgradeService.OnLevelUp вызван! Новый уровень: {newLevel}");
         ShowUpgradeSelection();
     }
 } 
