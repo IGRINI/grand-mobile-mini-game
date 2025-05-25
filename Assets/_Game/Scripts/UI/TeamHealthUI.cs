@@ -80,12 +80,18 @@ public class TeamHealthUI : MonoBehaviour
     
     private void OnPassengerHealthChanged(object passenger, IHealth health)
     {
+        Debug.Log($"TeamHealthUI: Здоровье пассажира изменилось - {health.CurrentHealth:F1}/{health.MaxHealth:F1}");
         if (_passengerSlots.TryGetValue(passenger, out int slotIndex))
         {
             if (slotIndex >= 0 && slotIndex < passengerHealthUIs.Count)
             {
+                Debug.Log($"Обновляем UI пассажира в слоте {slotIndex}");
                 passengerHealthUIs[slotIndex].UpdateHealth(health.CurrentHealth, health.MaxHealth);
             }
+        }
+        else
+        {
+            Debug.Log("Пассажир не найден в слотах!");
         }
     }
     
@@ -110,12 +116,18 @@ public class TeamHealthUI : MonoBehaviour
     
     public void AddPassenger(object passenger, string name = null)
     {
-        if (_passengerSlots.ContainsKey(passenger)) return;
+        Debug.Log($"TeamHealthUI: Добавляем пассажира {name ?? "без имени"}");
+        if (_passengerSlots.ContainsKey(passenger)) 
+        {
+            Debug.Log("Пассажир уже добавлен!");
+            return;
+        }
         
         for (int i = 0; i < passengerHealthUIs.Count; i++)
         {
             if (!passengerHealthUIs[i].gameObject.activeInHierarchy)
             {
+                Debug.Log($"Размещаем пассажира в слоте {i}");
                 _passengerSlots[passenger] = i;
                 passengerHealthUIs[i].SetCharacterName(name ?? $"Пассажир {i + 1}");
                 passengerHealthUIs[i].Show();
@@ -123,9 +135,14 @@ public class TeamHealthUI : MonoBehaviour
                 var passengerHealth = _healthService?.GetHealth(passenger);
                 if (passengerHealth != null)
                 {
+                    Debug.Log($"Подписываемся на здоровье пассажира: {passengerHealth.CurrentHealth:F1}/{passengerHealth.MaxHealth:F1}");
                     _trackedHealths[passenger] = passengerHealth;
                     passengerHealth.HealthChanged += _ => OnPassengerHealthChanged(passenger, passengerHealth);
                     passengerHealthUIs[i].UpdateHealth(passengerHealth.CurrentHealth, passengerHealth.MaxHealth);
+                }
+                else
+                {
+                    Debug.Log("Не удалось получить здоровье пассажира!");
                 }
                 break;
             }

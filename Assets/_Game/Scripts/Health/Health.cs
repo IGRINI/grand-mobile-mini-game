@@ -32,11 +32,16 @@ public class Health : IHealth
         
         float modifiedDamage = _damageModifier?.Invoke(damage) ?? damage;
         
+        Debug.Log($"Health.TakeDamage: {damage:F1} -> {modifiedDamage:F1}, текущее HP: {_currentHealth:F1}");
+        
         _currentHealth = Mathf.Max(0f, _currentHealth - modifiedDamage);
         HealthChanged?.Invoke(_currentHealth);
         
+        Debug.Log($"После урона HP: {_currentHealth:F1}, жив: {IsAlive}");
+        
         if (!IsAlive)
         {
+            Debug.Log("Персонаж умер!");
             Died?.Invoke();
         }
     }

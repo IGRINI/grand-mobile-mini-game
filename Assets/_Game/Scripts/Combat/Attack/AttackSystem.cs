@@ -74,6 +74,7 @@ public class AttackSystem : IAttackSystem
         float travelTime = distance / weaponData.ProjectileSpeed;
         var scheduler = projectileGO.AddComponent<ProjectileDamageScheduler>();
         scheduler.Construct(_healthService);
+        Debug.Log($"AttackSystem: Создаем снаряд с целью {target?.GetType().Name ?? "null"} и уроном {damage:F1}");
         scheduler.Initialize(target, damage, travelTime);
     }
 } 

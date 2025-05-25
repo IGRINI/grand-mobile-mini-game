@@ -190,7 +190,8 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
         object targetEntity = null;
         if (bestTarget != null)
         {
-            var characterView = bestTarget.GetComponent<ICharacterView>();
+            // Ищем ICharacterView на самом объекте или в родителях
+            var characterView = bestTarget.GetComponent<ICharacterView>() ?? bestTarget.GetComponentInParent<ICharacterView>();
             if (characterView != null)
             {
                 targetEntity = GetCharacterFromView(characterView);
@@ -200,6 +201,20 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
             {
                 targetEntity = _carController;
                 Debug.Log($"Враг атакует машину: {targetEntity?.GetType().Name ?? "null"}");
+            }
+            else
+            {
+                Debug.Log($"Не найден ICharacterView для цели {bestTarget.name}. Родитель: {bestTarget.parent?.name ?? "null"}");
+                // Попробуем найти в детях родителя
+                if (bestTarget.parent != null)
+                {
+                    var parentCharacterView = bestTarget.parent.GetComponent<ICharacterView>();
+                    if (parentCharacterView != null)
+                    {
+                        targetEntity = GetCharacterFromView(parentCharacterView);
+                        Debug.Log($"Найден ICharacterView в родителе, персонаж: {targetEntity?.GetType().Name ?? "null"}");
+                    }
+                }
             }
         }
         else
@@ -221,10 +236,12 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
             {
                 if (_characterService.GetCharacterView(character) == characterView)
                 {
+                    Debug.Log($"Найден персонаж {character.Name} для view");
                     return character;
                 }
             }
         }
+        Debug.Log("Персонаж не найден для view");
         return null;
     }
 

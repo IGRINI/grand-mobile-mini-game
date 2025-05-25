@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class HealthService : IHealthService
 {
@@ -13,10 +14,17 @@ public class HealthService : IHealthService
     
     public void RegisterEntity(object entity, IHealth health)
     {
-        if (entity == null || health == null) return;
+        if (entity == null || health == null) 
+        {
+            Debug.Log($"HealthService: Попытка регистрации null сущности или здоровья");
+            return;
+        }
+        
+        Debug.Log($"HealthService: Регистрируем сущность {entity.GetType().Name} с HP {health.CurrentHealth:F1}/{health.MaxHealth:F1}");
         
         if (_entities.ContainsKey(entity))
         {
+            Debug.Log($"Сущность {entity.GetType().Name} уже зарегистрирована, перерегистрируем");
             _entities[entity].Died -= () => OnEntityDied(entity);
         }
         
@@ -48,7 +56,15 @@ public class HealthService : IHealthService
     public void DamageEntity(object entity, float damage)
     {
         var health = GetHealth(entity);
-        health?.TakeDamage(damage);
+        if (health != null)
+        {
+            Debug.Log($"HealthService: Наносим урон {damage:F1} сущности {entity.GetType().Name}");
+            health.TakeDamage(damage);
+        }
+        else
+        {
+            Debug.Log($"HealthService: Не найдено здоровье для сущности {entity?.GetType().Name ?? "null"}");
+        }
     }
     
     public void HealEntity(object entity, float amount)

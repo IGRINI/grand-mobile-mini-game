@@ -80,11 +80,21 @@ public class CharacterService : ICharacterService, IInitializable
         
         if (_healthService != null && _teamHealthUI != null)
         {
+            Debug.Log($"CharacterService: Регистрируем персонажа {character.Name} в слоте {slotIndex}");
             _healthService.RegisterEntity(character, character.Health);
             if (slotIndex > 0)
             {
+                Debug.Log($"Добавляем пассажира {character.Name} в TeamHealthUI");
                 _teamHealthUI.AddPassenger(character, character.Name);
             }
+            else
+            {
+                Debug.Log($"Персонаж {character.Name} - водитель, не добавляем в пассажиры");
+            }
+        }
+        else
+        {
+            Debug.Log($"CharacterService: HealthService или TeamHealthUI равны null!");
         }
     }
     
