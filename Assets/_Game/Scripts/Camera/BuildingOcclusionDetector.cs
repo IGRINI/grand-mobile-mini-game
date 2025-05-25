@@ -7,12 +7,20 @@ public class BuildingOcclusionDetector : IBuildingOcclusionDetector
     private readonly HashSet<IBuildingTransparency> _occludedBuildings = new HashSet<IBuildingTransparency>();
     
     private const float OCCLUSION_THRESHOLD = 0.1f;
+    private bool _debugMode = false;
+
+    public void SetDebugMode(bool enabled)
+    {
+        _debugMode = enabled;
+    }
 
     public void RegisterBuilding(IBuildingTransparency building)
     {
         if (!_buildings.Contains(building))
         {
             _buildings.Add(building);
+            if (_debugMode)
+                Debug.Log($"[OcclusionDetector] Registered building: {building.Transform.name}");
         }
     }
 
@@ -20,33 +28,53 @@ public class BuildingOcclusionDetector : IBuildingOcclusionDetector
     {
         _buildings.Remove(building);
         _occludedBuildings.Remove(building);
+        if (_debugMode)
+            Debug.Log($"[OcclusionDetector] Unregistered building: {building.Transform.name}");
     }
 
     public void CheckOcclusion(Vector3 cameraPosition, Vector3 targetPosition)
     {
+        if (_debugMode)
+            Debug.Log($"[OcclusionDetector] Checking occlusion from {cameraPosition} to {targetPosition}");
+
         var currentlyOccluded = new HashSet<IBuildingTransparency>();
         
         Vector3 rayDirection = (targetPosition - cameraPosition).normalized;
         float rayDistance = Vector3.Distance(cameraPosition, targetPosition);
         
+        int checkedBuildings = 0;
+        int occludedCount = 0;
+        
         foreach (var building in _buildings)
         {
-            if (IsRayIntersectingBounds(cameraPosition, rayDirection, rayDistance, building.Bounds))
+            if (!building.OcclusionEnabled) continue;
+            if (building?.Transform == null) continue;
+            
+            checkedBuildings++;
+            
+            if (building.IsOccluding(cameraPosition, targetPosition))
             {
                 currentlyOccluded.Add(building);
+                occludedCount++;
                 
                 if (!_occludedBuildings.Contains(building))
                 {
-                    building.SetTransparency(0.3f);
+                    building.SetTransparency(building.TransparentAlpha);
+                    if (_debugMode)
+                        Debug.Log($"[OcclusionDetector] Making transparent: {building.Transform.name}");
                 }
             }
         }
         
+        int restoredCount = 0;
         foreach (var building in _occludedBuildings)
         {
             if (!currentlyOccluded.Contains(building))
             {
                 building.RestoreOpacity();
+                restoredCount++;
+                if (_debugMode)
+                    Debug.Log($"[OcclusionDetector] Restoring opacity: {building.Transform.name}");
             }
         }
         
@@ -55,28 +83,8 @@ public class BuildingOcclusionDetector : IBuildingOcclusionDetector
         {
             _occludedBuildings.Add(building);
         }
-    }
-
-    private bool IsRayIntersectingBounds(Vector3 rayOrigin, Vector3 rayDirection, float rayDistance, Bounds bounds)
-    {
-        Vector3 invDir = new Vector3(
-            Mathf.Approximately(rayDirection.x, 0) ? float.MaxValue : 1f / rayDirection.x,
-            Mathf.Approximately(rayDirection.y, 0) ? float.MaxValue : 1f / rayDirection.y,
-            Mathf.Approximately(rayDirection.z, 0) ? float.MaxValue : 1f / rayDirection.z
-        );
-
-        Vector3 t1 = Vector3.Scale(bounds.min - rayOrigin, invDir);
-        Vector3 t2 = Vector3.Scale(bounds.max - rayOrigin, invDir);
-
-        Vector3 tMin = Vector3.Min(t1, t2);
-        Vector3 tMax = Vector3.Max(t1, t2);
-
-        float tNear = Mathf.Max(Mathf.Max(tMin.x, tMin.y), tMin.z);
-        float tFar = Mathf.Min(Mathf.Min(tMax.x, tMax.y), tMax.z);
-
-        if (tNear > tFar || tFar < 0 || tNear > rayDistance)
-            return false;
-
-        return tNear >= OCCLUSION_THRESHOLD;
+        
+        if (_debugMode)
+            Debug.Log($"[OcclusionDetector] Checked {checkedBuildings} buildings, {occludedCount} occluded, {restoredCount} restored");
     }
 } 

@@ -84,4 +84,27 @@
 - Упрощенное освещение (half precision)
 - Минимальное количество texture samples
 - Оптимизированные математические операции
-- Правильный fallback shader 
+- Правильный fallback shader
+
+## Отладка проблем
+
+### Если тени не отбрасываются:
+1. Убедитесь, что материалы используют шейдер `Custom/URP/WebGLMobileInstancedTransparent`
+2. Проверьте настройки света (Cast Shadows = On)
+3. Проверьте настройки URP Asset (Shadow Distance, Shadow Cascades)
+
+### Если прозрачность не работает:
+1. Добавьте компонент `OcclusionDebugger` в сцену
+2. Нажмите F1 для включения дебага
+3. Нажмите F2 для тестирования прозрачности
+4. Проверьте консоль на наличие ошибок
+
+### Настройка дебага:
+- В `CameraOcclusionController` включите `debugMode = true`
+- В `BuildingTransparency` включите `debugMode = true`
+- Используйте `OcclusionDebugger` для тестирования
+
+### Частые проблемы:
+- **Шейдер не найден**: Убедитесь, что оба шейдера скомпилированы
+- **Материалы не переключаются**: Проверьте, что BuildingTransparency инициализирован
+- **Постоянное мерцание**: Увеличьте `checkInterval` в CameraOcclusionController 

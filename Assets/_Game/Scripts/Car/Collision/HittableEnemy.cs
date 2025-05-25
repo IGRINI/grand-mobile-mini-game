@@ -33,6 +33,8 @@ public class HittableEnemy : MonoBehaviour, IHittable, IEnemyComponent
     public float Radius => radius;
     public Vector3 CenterOffset => centerOffset;
     public Enemy Enemy => _enemy;
+    public float CollisionRadius => radius;
+    public Vector3 CollisionCenterOffset => centerOffset;
     
     [Inject]
     public void Construct(IEnemyDetector enemyDetector, IEnemyHealthHandler healthHandler, IEnemyService enemyService)

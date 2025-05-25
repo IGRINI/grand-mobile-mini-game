@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Zenject;
 
-public class FlyingObstacleView : MonoBehaviour, IHittable
+public class FlyingObstacleView : ObstacleView, IHittable
 {
     [SerializeField] private float hitForce = 10f;
     [SerializeField] private float upForce = 5f;
@@ -10,33 +10,50 @@ public class FlyingObstacleView : MonoBehaviour, IHittable
     [SerializeField] private float destroyAfter = 5f;
     [SerializeField] private Vector3 rotationSpeed = new Vector3(360f, 360f, 360f);
 
-    private IEnemyDetector _enemyDetector;
     private bool _isHit = false;
+    private HittableCircleObstacle _hittableObstacle;
 
-    [Inject]
-    public void Construct(IEnemyDetector enemyDetector)
-    {
-        _enemyDetector = enemyDetector;
-    }
+    public new IObstacle Obstacle => _hittableObstacle ??= new HittableCircleObstacle(transform.position + centerOffset, radius, this);
 
-    private void Start()
-    {
-        _enemyDetector?.RegisterEnemy(this);
-    }
-
-    private void OnDestroy()
-    {
-        _enemyDetector?.UnregisterEnemy(this);
-    }
+    public float CollisionRadius => radius;
+    public Vector3 CollisionCenterOffset => centerOffset;
 
     public bool CanBeHit => !_isHit;
     public bool CanAct => !_isHit;
 
+    private void Update()
+    {
+        if (_hittableObstacle != null)
+        {
+            _hittableObstacle.UpdatePosition(transform.position + centerOffset);
+        }
+    }
+
+    protected override void Start()
+    {
+        Debug.Log($"FlyingObstacleView {name} starting, registering obstacle");
+        if (_obstacleService != null)
+        {
+            _obstacleService.RegisterObstacle(Obstacle);
+            Debug.Log($"FlyingObstacleView {name} registered obstacle successfully");
+        }
+        else
+        {
+            Debug.LogError($"FlyingObstacleView {name} - _obstacleService is null!");
+        }
+    }
+
     public void OnHit(Vector3 hitDirection, float speed)
     {
+        Debug.Log($"FlyingObstacleView.OnHit called! Direction: {hitDirection}, Speed: {speed}, IsHit: {_isHit}");
         if (_isHit) return;
         _isHit = true;
-        _enemyDetector?.UnregisterEnemy(this);
+        
+        if (_obstacleService != null)
+        {
+            _obstacleService.UnregisterObstacle(Obstacle);
+        }
+        
         StartCoroutine(FlyAndDestroy(hitDirection, speed));
     }
 

@@ -6,15 +6,21 @@ using Zenject;
 public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
 {
     [SerializeField] private float transparentAlpha = 0.3f;
+    public float TransparentAlpha => transparentAlpha;
     [SerializeField] private float animationDuration = 0.3f;
+    [SerializeField] private bool debugMode = false;
+    [SerializeField] private bool occlusionEnabled = true;
+    public bool OcclusionEnabled => occlusionEnabled;
     
     private Renderer[] _renderers;
     private Material[] _originalMaterials;
     private Material[] _transparentMaterials;
     private Bounds _bounds;
     private bool _isTransparent = false;
+    private bool _isAnimating = false;
     private Coroutine _animationCoroutine;
     private IBuildingOcclusionDetector _occlusionDetector;
+    private Bounds _localBounds;
 
     public Transform Transform => transform;
     public Bounds Bounds => _bounds;
@@ -28,12 +34,15 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
     private void Awake()
     {
         InitializeMaterials();
+        CalculateLocalBounds();
         CalculateBounds();
     }
 
     private void Start()
     {
         _occlusionDetector?.RegisterBuilding(this);
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Registered building: {gameObject.name}");
     }
 
     private void OnDestroy()
@@ -78,6 +87,9 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
 
         _originalMaterials = materialsList.ToArray();
         _transparentMaterials = transparentMaterialsList.ToArray();
+        
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Initialized {_originalMaterials.Length} materials for {gameObject.name}");
     }
 
     private void CalculateBounds()
@@ -101,8 +113,33 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
         _bounds = bounds;
     }
 
+    private void CalculateLocalBounds()
+    {
+        if (_renderers == null || _renderers.Length == 0)
+        {
+            _localBounds = new Bounds(Vector3.zero, Vector3.zero);
+            return;
+        }
+        Bounds b = _renderers[0].localBounds;
+        for (int i = 1; i < _renderers.Length; i++)
+        {
+            b.Encapsulate(_renderers[i].localBounds);
+        }
+        _localBounds = b;
+    }
+
     public void SetTransparency(float alpha, float duration = 0.3f)
     {
+        if (_isTransparent)
+        {
+            if (debugMode)
+                Debug.Log($"[BuildingTransparency] Already transparent, skipping: {gameObject.name}");
+            return;
+        }
+
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Setting transparency {alpha} for: {gameObject.name}");
+
         if (_animationCoroutine != null)
         {
             StopCoroutine(_animationCoroutine);
@@ -113,6 +150,16 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
 
     public void RestoreOpacity(float duration = 0.3f)
     {
+        if (!_isTransparent && !_isAnimating)
+        {
+            if (debugMode)
+                Debug.Log($"[BuildingTransparency] Already opaque, skipping: {gameObject.name}");
+            return;
+        }
+
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Restoring opacity for: {gameObject.name}");
+
         if (_animationCoroutine != null)
         {
             StopCoroutine(_animationCoroutine);
@@ -123,11 +170,26 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
 
     public bool IsOccluding(Vector3 cameraPos, Vector3 targetPos)
     {
-        return _bounds.IntersectRay(new Ray(cameraPos, (targetPos - cameraPos).normalized));
+        Vector3 direction = (targetPos - cameraPos).normalized;
+        float maxDistance = Vector3.Distance(cameraPos, targetPos);
+        Ray worldRay = new Ray(cameraPos, direction);
+        
+        // Преобразуем луч в локальные координаты объекта
+        Vector3 localOrigin = transform.InverseTransformPoint(worldRay.origin);
+        Vector3 localDir = transform.InverseTransformDirection(worldRay.direction);
+        localDir.Normalize();
+        Ray localRay = new Ray(localOrigin, localDir);
+        
+        if (!_localBounds.IntersectRay(localRay, out float distance))
+            return false;
+        
+        return distance <= maxDistance;
     }
 
     private IEnumerator AnimateToTransparency(float targetAlpha, float duration)
     {
+        _isAnimating = true;
+        
         if (!_isTransparent)
         {
             ApplyTransparentMaterials();
@@ -148,13 +210,22 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
         }
 
         SetMaterialAlpha(targetAlpha);
+        _isAnimating = false;
         _animationCoroutine = null;
+        
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Transparency animation completed for: {gameObject.name}");
     }
 
     private IEnumerator AnimateToOpacity(float duration)
     {
-        if (!_isTransparent) yield break;
+        if (!_isTransparent) 
+        {
+            _isAnimating = false;
+            yield break;
+        }
 
+        _isAnimating = true;
         float startAlpha = GetCurrentAlpha();
         float elapsed = 0f;
 
@@ -170,7 +241,11 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
 
         ApplyOriginalMaterials();
         _isTransparent = false;
+        _isAnimating = false;
         _animationCoroutine = null;
+        
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Opacity animation completed for: {gameObject.name}");
     }
 
     private void ApplyTransparentMaterials()
@@ -185,6 +260,9 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
             }
             renderer.materials = materials;
         }
+        
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Applied transparent materials to: {gameObject.name}");
     }
 
     private void ApplyOriginalMaterials()
@@ -199,6 +277,9 @@ public class BuildingTransparency : MonoBehaviour, IBuildingTransparency
             }
             renderer.materials = materials;
         }
+        
+        if (debugMode)
+            Debug.Log($"[BuildingTransparency] Applied original materials to: {gameObject.name}");
     }
 
     private void SetMaterialAlpha(float alpha)

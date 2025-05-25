@@ -8,4 +8,6 @@ public interface ICollisionDetector
     Vector3 GetRectangleCollisionNormal(Vector3 position, Vector3 carSize, Quaternion carRotation);
     IObstacle GetCollidingObstacle(Vector3 position, float carRadius);
     IObstacle GetCollidingObstacleRectangle(Vector3 position, Vector3 carSize, Quaternion carRotation);
+    IHittable GetCollidingHittableObstacle(Vector3 position, Vector3 carSize, Quaternion carRotation);
+    Vector3 GetPushOutDirection(Vector3 position, Vector3 carSize, Quaternion carRotation);
 } 

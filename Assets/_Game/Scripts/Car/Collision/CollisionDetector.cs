@@ -113,4 +113,83 @@ public class CollisionDetector : ICollisionDetector
         }
         return null;
     }
+
+    public IHittable GetCollidingHittableObstacle(Vector3 position, Vector3 carSize, Quaternion carRotation)
+    {
+        foreach (var obstacle in _obstacles)
+        {
+            if (obstacle is IHittable hittable && hittable.CanBeHit)
+            {
+                MonoBehaviour mb = null;
+                if (obstacle is HittableCircleObstacle hittableCircle)
+                {
+                    mb = hittableCircle._hittableComponent as MonoBehaviour;
+                }
+                else
+                {
+                    mb = hittable as MonoBehaviour;
+                }
+                
+                if (mb == null || !mb.gameObject.activeInHierarchy) continue;
+
+                if (obstacle is RectangleObstacle rectObstacle)
+                {
+                    if (rectObstacle.IsCollidingWithRectangle(position, carSize, carRotation))
+                    {
+                        Debug.Log($"Found colliding hittable rectangle obstacle: {mb.name}");
+                        return hittable;
+                    }
+                }
+                else if (obstacle.IsCollidingWith(position, Mathf.Max(carSize.x, carSize.z) * 0.5f))
+                {
+                    Debug.Log($"Found colliding hittable circle obstacle: {mb.name}");
+                    return hittable;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Vector3 GetPushOutDirection(Vector3 position, Vector3 carSize, Quaternion carRotation)
+    {
+        Vector3 totalPushDirection = Vector3.zero;
+        int collisionCount = 0;
+
+        foreach (var obstacle in _obstacles)
+        {
+            bool isColliding = false;
+            Vector3 pushDirection = Vector3.zero;
+
+            if (obstacle is RectangleObstacle rectObstacle)
+            {
+                if (rectObstacle.IsCollidingWithRectangle(position, carSize, carRotation))
+                {
+                    isColliding = true;
+                    pushDirection = position - obstacle.Position;
+                }
+            }
+            else if (obstacle.IsCollidingWith(position, Mathf.Max(carSize.x, carSize.z) * 0.5f))
+            {
+                isColliding = true;
+                pushDirection = position - obstacle.Position;
+            }
+
+            if (isColliding)
+            {
+                pushDirection.y = 0;
+                if (pushDirection.sqrMagnitude > 0.001f)
+                {
+                    totalPushDirection += pushDirection.normalized;
+                    collisionCount++;
+                }
+            }
+        }
+
+        if (collisionCount > 0)
+        {
+            return (totalPushDirection / collisionCount).normalized;
+        }
+
+        return Vector3.zero;
+    }
 } 

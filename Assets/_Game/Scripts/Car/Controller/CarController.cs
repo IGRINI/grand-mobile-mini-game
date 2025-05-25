@@ -126,6 +126,15 @@ public class CarController : IFixedTickable, IDisposable
         Vector3 currentCenter = _view.Transform.position + offset;
         Vector3 targetCenter = currentCenter + _view.Transform.forward * _model.CurrentSpeed * deltaTime;
         
+        Vector3 pushOutDirection = _collisionDetector.GetPushOutDirection(currentCenter, _view.CollisionSize, _view.Transform.rotation);
+        if (pushOutDirection != Vector3.zero)
+        {
+            float pushForce = 2f * Time.fixedDeltaTime;
+            _view.Transform.position += pushOutDirection * pushForce;
+            currentCenter = _view.Transform.position + offset;
+            targetCenter = currentCenter + _view.Transform.forward * _model.CurrentSpeed * deltaTime;
+        }
+        
         bool hasObstacleCollision = false;
         if (Mathf.Abs(_model.CurrentSpeed) > 0.01f)
         {
@@ -133,8 +142,48 @@ public class CarController : IFixedTickable, IDisposable
         }
         
         var collidingEnemy = _enemyDetector.GetCollidingEnemy(targetCenter, _view.CollisionSize, _view.Transform.rotation);
+        var collidingHittableObstacle = _collisionDetector.GetCollidingHittableObstacle(targetCenter, _view.CollisionSize, _view.Transform.rotation);
         
-        if (hasObstacleCollision)
+        if (collidingHittableObstacle != null)
+        {
+            Debug.Log($"Found collidingHittableObstacle: {collidingHittableObstacle.GetType().Name}, CanBeHit: {collidingHittableObstacle.CanBeHit}");
+        }
+        
+        if (collidingEnemy != null && collidingEnemy.CanBeHit)
+        {
+            Vector3 enemyPos = ((MonoBehaviour)collidingEnemy).transform.position;
+            Vector3 hitDirection = (enemyPos - _view.Transform.position).normalized;
+            
+            collidingEnemy.OnHit(hitDirection, Mathf.Abs(_model.CurrentSpeed));
+            _damageDealer.DealDamage(collidingEnemy, _model.CurrentSpeed, _model.MaxSpeed, _model.BaseCollisionDamage);
+            
+            _model.CurrentSpeed = Mathf.Max(0f, Mathf.Abs(_model.CurrentSpeed) - _model.SpeedReductionPerEnemy) * Mathf.Sign(_model.CurrentSpeed);
+            
+            _view.Transform.position = targetCenter - offset;
+        }
+        else if (collidingHittableObstacle != null && collidingHittableObstacle.CanBeHit)
+        {
+            Debug.Log($"Hitting hittable obstacle! Speed: {Mathf.Abs(_model.CurrentSpeed)}");
+            
+            Vector3 obstaclePos;
+            if (collidingHittableObstacle is HittableCircleObstacle hittableCircle)
+            {
+                obstaclePos = ((MonoBehaviour)hittableCircle._hittableComponent).transform.position;
+            }
+            else
+            {
+                obstaclePos = ((MonoBehaviour)collidingHittableObstacle).transform.position;
+            }
+            
+            Vector3 hitDirection = (obstaclePos - _view.Transform.position).normalized;
+            
+            collidingHittableObstacle.OnHit(hitDirection, Mathf.Abs(_model.CurrentSpeed));
+            
+            _model.CurrentSpeed = Mathf.Max(0f, Mathf.Abs(_model.CurrentSpeed) - _model.SpeedReductionPerEnemy) * Mathf.Sign(_model.CurrentSpeed);
+            
+            _view.Transform.position = targetCenter - offset;
+        }
+        else if (hasObstacleCollision)
         {
             var collidingObstacle = _collisionDetector.GetCollidingObstacleRectangle(targetCenter, _view.CollisionSize, _view.Transform.rotation);
             Vector3 collisionNormal = _collisionDetector.GetRectangleCollisionNormal(targetCenter, _view.CollisionSize, _view.Transform.rotation);
@@ -153,18 +202,6 @@ public class CarController : IFixedTickable, IDisposable
             }
             
             _model.CurrentSpeed = 0f;
-        }
-        else if (collidingEnemy != null && collidingEnemy.CanBeHit)
-        {
-            Vector3 enemyPos = ((HittableEnemy)collidingEnemy).transform.position;
-            Vector3 hitDirection = (enemyPos - _view.Transform.position).normalized;
-            
-            collidingEnemy.OnHit(hitDirection, Mathf.Abs(_model.CurrentSpeed));
-            _damageDealer.DealDamage(collidingEnemy, _model.CurrentSpeed, _model.MaxSpeed, _model.BaseCollisionDamage);
-            
-            _model.CurrentSpeed = Mathf.Max(0f, Mathf.Abs(_model.CurrentSpeed) - _model.SpeedReductionPerEnemy) * Mathf.Sign(_model.CurrentSpeed);
-            
-            _view.Transform.position = targetCenter - offset;
         }
         else
         {

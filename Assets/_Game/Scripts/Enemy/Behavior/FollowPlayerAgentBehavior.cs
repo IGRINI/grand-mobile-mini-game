@@ -182,7 +182,7 @@ public class FollowPlayerAgentBehavior : IEnemyBehavior
         
         // Fallback, если агент не настроен или не на NavMesh
         float sqrDistance = (_target.position - _transform.position).sqrMagnitude;
-        float sqrAttackRange = _enemy.AttackRange * _enemy.AttackRange + 0.04f;
+        float sqrAttackRange = _enemy.AttackRange * _enemy.AttackRange + 0.09f;
         return sqrDistance <= sqrAttackRange && _lastAttackTime >= _enemy.AttackCooldown;
     }
 

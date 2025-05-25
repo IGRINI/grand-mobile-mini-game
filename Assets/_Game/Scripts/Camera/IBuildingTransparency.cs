@@ -7,4 +7,6 @@ public interface IBuildingTransparency
     void SetTransparency(float alpha, float duration = 0.3f);
     void RestoreOpacity(float duration = 0.3f);
     bool IsOccluding(Vector3 cameraPos, Vector3 targetPos);
+    float TransparentAlpha { get; }
+    bool OcclusionEnabled { get; }
 } 

@@ -3,13 +3,13 @@ using Zenject;
 
 public class ObstacleView : MonoBehaviour
 {
-    [SerializeField] private float radius = 1f;
-    [SerializeField] private Vector3 centerOffset = Vector3.zero;
+    [SerializeField] protected float radius = 1f;
+    [SerializeField] protected Vector3 centerOffset = Vector3.zero;
     
     private IObstacle _obstacle;
-    private IObstacleService _obstacleService;
+    protected IObstacleService _obstacleService;
     
-    public IObstacle Obstacle => _obstacle ??= new CircleObstacle(transform.position + centerOffset, radius);
+    public virtual IObstacle Obstacle => _obstacle ??= new CircleObstacle(transform.position + centerOffset, radius);
     
     [Inject]
     public void Construct(IObstacleService obstacleService)
@@ -17,7 +17,7 @@ public class ObstacleView : MonoBehaviour
         _obstacleService = obstacleService;
     }
     
-    private void Start()
+    protected virtual void Start()
     {
         if (_obstacleService != null)
         {

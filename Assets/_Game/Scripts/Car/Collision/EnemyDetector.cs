@@ -24,21 +24,14 @@ public class EnemyDetector : IEnemyDetector
         
         foreach (var enemy in _enemies)
         {
-            if (enemy is HittableEnemy hittableEnemy)
-            {
-                if (!hittableEnemy.gameObject.activeInHierarchy)
-                {
-                    continue;
-                }
+            var mb = enemy as MonoBehaviour;
+            if (mb == null || !mb.gameObject.activeInHierarchy) continue;
 
-                Vector3 enemyPos = hittableEnemy.transform.position + hittableEnemy.CenterOffset;
-                float sqrDistance = (position - enemyPos).sqrMagnitude;
-                float totalRadius = carRadius + hittableEnemy.Radius;
-                
-                if (sqrDistance <= totalRadius * totalRadius)
-                {
-                    return enemy;
-                }
+            Vector3 enemyPos = mb.transform.position + enemy.CollisionCenterOffset;
+            float totalRadius = carRadius + enemy.CollisionRadius;
+            if ((position - enemyPos).sqrMagnitude <= totalRadius * totalRadius)
+            {
+                return enemy;
             }
         }
         

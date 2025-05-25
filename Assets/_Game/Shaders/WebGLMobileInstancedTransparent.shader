@@ -127,11 +127,6 @@ Shader "Custom/URP/WebGLMobileInstancedTransparent"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
-            UNITY_INSTANCING_BUFFER_START(Props)
-                UNITY_DEFINE_INSTANCED_PROP(half4, _BaseColor)
-                UNITY_DEFINE_INSTANCED_PROP(half, _Alpha)
-            UNITY_INSTANCING_BUFFER_END(Props)
-
             struct Attributes
             {
                 float4 positionOS   : POSITION;
@@ -145,35 +140,28 @@ Shader "Custom/URP/WebGLMobileInstancedTransparent"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            float4 GetShadowPositionHClip(Attributes input)
-            {
-                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
-
-                float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _MainLightPosition.xyz));
-
-            #if UNITY_REVERSED_Z
-                positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
-            #else
-                positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
-            #endif
-
-                return positionCS;
-            }
-
             Varyings ShadowPassVertex(Attributes input)
             {
                 Varyings output;
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-                output.positionCS = GetShadowPositionHClip(input);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+
+                output.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _MainLightPosition.xyz));
+
+                #if UNITY_REVERSED_Z
+                    output.positionCS.z = min(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #else
+                    output.positionCS.z = max(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #endif
+
                 return output;
             }
 
             half4 ShadowPassFragment(Varyings input) : SV_TARGET
             {
-                UNITY_SETUP_INSTANCE_ID(input);
                 return 0;
             }
 
