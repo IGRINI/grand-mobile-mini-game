@@ -269,6 +269,12 @@ public class EnemyView : MonoBehaviour, IEnemyView, IPoolable<Vector3, Quaternio
             if (_weaponView != null)
                 _behavior.SetWeaponView(_weaponView);
         }
+        
+        var navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (navMeshAgent != null && navMeshAgent.enabled)
+        {
+            navMeshAgent.Warp(position);
+        }
     }
 
     public void OnDespawned()

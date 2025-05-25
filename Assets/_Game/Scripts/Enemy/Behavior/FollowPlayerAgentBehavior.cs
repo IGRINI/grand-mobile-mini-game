@@ -46,10 +46,16 @@ public class FollowPlayerAgentBehavior : IEnemyBehavior
         {
             _agent.speed = _enemy.MoveSpeed;
             _agent.stoppingDistance = _enemy.AttackRange;
-            _agent.acceleration = _enemy.MoveSpeed * 2; // Примерное значение, можно вынести в EnemyData
-            _agent.angularSpeed = 360; // Примерное значение, можно вынести в EnemyData
+            _agent.acceleration = _enemy.MoveSpeed * 2;
+            _agent.angularSpeed = 360;
+            _agent.baseOffset = 0f;
         }
         _agent.updateRotation = false;
+        
+        if (_agent.enabled)
+        {
+            _agent.Warp(_transform.position);
+        }
     }
 
     public void SetAimTargets(Transform spineTarget, Transform headTarget)
