@@ -24,7 +24,7 @@ public class CarInstaller : MonoInstaller
         Container.Bind<ICarModel>().To<CarModel>().AsSingle().WithArguments(new object[]{acceleration, brakeForce, maxSpeed, maxReverseSpeed, turnSpeed, minSpeedToTurn, maxTurnRate, turnRateSpeedFactor, baseCollisionDamage, selfDamageMultiplier, speedReductionPerEnemy});
         Container.BindInstance(initialHealth).WhenInjectedInto<CarController>();
         Container.Bind<ICarView>().To<CarView>().FromComponentInHierarchy().AsSingle();
-        Container.BindInterfacesAndSelfTo<InputService>().AsSingle().NonLazy();
+        Container.Bind<IInputService>().To<MobileInputService>().FromComponentInHierarchy().AsSingle().NonLazy();
         Container.Bind<IObstacleService>().To<ObstacleService>().AsSingle();
         Container.Bind<ICollisionDetector>().FromMethod(ctx => ctx.Container.Resolve<IObstacleService>().GetCollisionDetector()).AsSingle();
         Container.Bind<IEnemyDetector>().To<EnemyDetector>().AsSingle();

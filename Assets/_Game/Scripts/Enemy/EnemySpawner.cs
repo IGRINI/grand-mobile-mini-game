@@ -3,7 +3,8 @@ using Zenject;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] private float spawnRadius = 10f;
+    [SerializeField] private Vector3 spawnBoundsMin = new Vector3(-10f, 0f, -10f);
+    [SerializeField] private Vector3 spawnBoundsMax = new Vector3(10f, 0f, 10f);
     [SerializeField] private float spawnInterval = 3f;
     [SerializeField] private int maxActiveEnemies = 10;
     private EnemyData[] _enemyConfigs;
@@ -43,10 +44,25 @@ public class EnemySpawner : MonoBehaviour
 
     private Vector3 GetRandomSpawnPosition()
     {
-        var playerPosition = _carView.Transform.position;
-        var randomDirection = Random.insideUnitCircle.normalized;
-        var spawnOffset = new Vector3(randomDirection.x, 0f, randomDirection.y) * spawnRadius;
-        
-        return playerPosition + spawnOffset;
+        float x = Random.Range(spawnBoundsMin.x, spawnBoundsMax.x);
+        float y = spawnBoundsMin.y;
+        float z = Random.Range(spawnBoundsMin.z, spawnBoundsMax.z);
+        Vector3 localPos = new Vector3(x, y, z);
+        return transform.TransformPoint(localPos);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Matrix4x4 oldMatrix = Gizmos.matrix;
+        Gizmos.matrix = transform.localToWorldMatrix;
+        Vector3 centerLocal = (spawnBoundsMin + spawnBoundsMax) * 0.5f;
+        Vector3 size = new Vector3(
+            spawnBoundsMax.x - spawnBoundsMin.x,
+            spawnBoundsMax.y - spawnBoundsMin.y,
+            spawnBoundsMax.z - spawnBoundsMin.z
+        );
+        Gizmos.DrawWireCube(centerLocal, size);
+        Gizmos.matrix = oldMatrix;
     }
 } 

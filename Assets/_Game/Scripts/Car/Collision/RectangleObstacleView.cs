@@ -7,7 +7,7 @@ public class RectangleObstacleView : MonoBehaviour
     [SerializeField] private Vector3 centerOffset = Vector3.zero;
     
     private IObstacle _obstacle;
-    private IObstacleService _obstacleService;
+    protected IObstacleService _obstacleService;
     
     public IObstacle Obstacle => _obstacle ??= new RectangleObstacle(transform.position + centerOffset, size, transform.rotation);
     

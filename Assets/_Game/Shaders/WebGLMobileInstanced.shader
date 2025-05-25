@@ -4,6 +4,7 @@ Shader "Custom/URP/WebGLMobileInstanced"
     {
         _BaseColor("Base Color", Color) = (1,1,1,1)
         _MainTex("Main Texture", 2D) = "white" {}
+        _MainTex_ST("Texture Scale and Offset", Vector) = (1,1,0,0)
     }
     SubShader
     {
@@ -33,6 +34,7 @@ Shader "Custom/URP/WebGLMobileInstanced"
 
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(half4, _BaseColor)
+                UNITY_DEFINE_INSTANCED_PROP(float4, _MainTex_ST)
             UNITY_INSTANCING_BUFFER_END(Props)
 
             TEXTURE2D(_MainTex);
@@ -63,7 +65,9 @@ Shader "Custom/URP/WebGLMobileInstanced"
 
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionCS = positionInputs.positionCS;
-                output.uv = input.uv;
+                
+                float4 textureST = UNITY_ACCESS_INSTANCED_PROP(Props, _MainTex_ST);
+                output.uv = input.uv * textureST.xy + textureST.zw;
 
                 half3 normalWS = TransformObjectToWorldNormal(input.normalOS);
                 Light mainLight = GetMainLight();
