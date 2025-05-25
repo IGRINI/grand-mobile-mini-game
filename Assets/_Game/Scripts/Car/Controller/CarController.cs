@@ -3,7 +3,7 @@ using UnityEngine;
 using Zenject;
 using System.Collections.Generic;
 
-public class CarController : IFixedTickable, IDisposable
+public class CarController : IFixedTickable, IDisposable, ICarModelProvider
 {
     private readonly IReadOnlyList<Transform> _wheels;
     private readonly IReadOnlyList<Transform> _steerPivots;
@@ -23,6 +23,8 @@ public class CarController : IFixedTickable, IDisposable
     private readonly CarCollisionEffect _collisionEffect;
     private readonly ICarDamageDealer _damageDealer;
     private readonly IEnemyDetector _enemyDetector;
+
+    public ICarModel CarModel => _model;
 
     public CarController(ICarModel model, ICarView view, IInputService input, IHealthService healthService, ICollisionDetector collisionDetector, IEnemyDetector enemyDetector, ICarDamageDealer damageDealer, float initialHealth)
     {

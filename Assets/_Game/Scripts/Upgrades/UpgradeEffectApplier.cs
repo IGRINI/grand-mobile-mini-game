@@ -8,7 +8,6 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
     private readonly IHealthService _healthService;
     private readonly ICharacterService _characterService;
     private readonly IExperienceService _experienceService;
-    private readonly ICarModel _carModel;
     
     private readonly Dictionary<object, float> _baseMaxSpeeds = new();
     private readonly Dictionary<object, float> _baseFireRates = new();
@@ -16,6 +15,7 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
     private readonly Dictionary<object, float> _baseDamages = new();
     
     private object _carController; // Ссылка на CarController
+    private ICarModel _carModel; // Получаем через CarController
     private float _healthRegenerationTimer;
     private const float HEALTH_REGEN_INTERVAL = 1f;
     
@@ -23,14 +23,12 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
         IUpgradeService upgradeService,
         IHealthService healthService,
         ICharacterService characterService,
-        IExperienceService experienceService,
-        ICarModel carModel)
+        IExperienceService experienceService)
     {
         _upgradeService = upgradeService;
         _healthService = healthService;
         _characterService = characterService;
         _experienceService = experienceService;
-        _carModel = carModel;
     }
     
     public void Initialize()
@@ -54,11 +52,6 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
     
     private void StoreBaseValues()
     {
-        if (_carModel != null)
-        {
-            _baseMaxSpeeds[_carModel] = _carModel.MaxSpeed;
-        }
-        
         var characters = _characterService.GetAllCharacters();
         foreach (var character in characters)
         {
@@ -68,6 +61,14 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
                 _baseRanges[character] = character.DefaultWeapon.Range;
                 _baseDamages[character] = character.DefaultWeapon.Damage;
             }
+        }
+    }
+    
+    private void StoreCarBaseValues()
+    {
+        if (_carModel != null)
+        {
+            _baseMaxSpeeds[_carModel] = _carModel.MaxSpeed;
         }
     }
     
@@ -84,9 +85,12 @@ public class UpgradeEffectApplier : IInitializable, System.IDisposable, IUpgrade
     private void OnEntityRegistered(object entity, IHealth health)
     {
         // Ищем CarController среди зарегистрированных сущностей
-        if (entity.GetType().Name == "CarController")
+        if (entity is ICarModelProvider carModelProvider)
         {
             _carController = entity;
+            _carModel = carModelProvider.CarModel;
+            StoreCarBaseValues();
+            
             // Устанавливаем модификатор урона для машины
             health.SetDamageModifier(damage => 
             {

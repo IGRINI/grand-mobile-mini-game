@@ -32,5 +32,6 @@ public class CarInstaller : MonoInstaller
         Container.Bind<ITargetSelector>().To<TargetSelector>().AsSingle();
         Container.Bind<ICharacterTargetSelector>().To<CharacterTargetSelector>().AsSingle();
         Container.BindInterfacesAndSelfTo<CarController>().AsSingle().NonLazy();
+        Container.Bind<ICarModelProvider>().To<CarController>().FromResolve();
     }
 } 
