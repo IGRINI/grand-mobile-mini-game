@@ -167,6 +167,8 @@ public class UpgradeSelectionUI : MonoBehaviour
             canvasGroup = upgradePanel.AddComponent<CanvasGroup>();
             
         canvasGroup.alpha = 0f;
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
         upgradePanel.transform.localScale = Vector3.zero;
         
         if (backgroundOverlay != null)
@@ -179,6 +181,11 @@ public class UpgradeSelectionUI : MonoBehaviour
         sequence.Append(canvasGroup.DOFade(1f, panelAnimationDuration).SetUpdate(true));
         sequence.Join(upgradePanel.transform.DOScale(Vector3.one, panelAnimationDuration)
             .SetEase(Ease.OutBack).SetUpdate(true));
+        sequence.SetUpdate(true);
+        sequence.OnComplete(() => {
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        });
     }
     
     private void AnimateHidePanel(System.Action onComplete = null)
@@ -193,6 +200,9 @@ public class UpgradeSelectionUI : MonoBehaviour
         if (canvasGroup == null)
             canvasGroup = upgradePanel.AddComponent<CanvasGroup>();
         
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
+        
         if (backgroundOverlay != null)
         {
             backgroundOverlay.DOFade(0f, panelAnimationDuration).SetUpdate(true);
@@ -202,6 +212,7 @@ public class UpgradeSelectionUI : MonoBehaviour
         sequence.Append(canvasGroup.DOFade(0f, panelAnimationDuration).SetUpdate(true));
         sequence.Join(upgradePanel.transform.DOScale(Vector3.zero, panelAnimationDuration)
             .SetEase(Ease.InBack).SetUpdate(true));
+        sequence.SetUpdate(true);
         sequence.OnComplete(() => onComplete?.Invoke());
     }
 } 
