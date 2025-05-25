@@ -5,6 +5,7 @@ Shader "Custom/URP/WebGLMobileInstanced"
         _BaseColor("Base Color", Color) = (1,1,1,1)
         _MainTex("Main Texture", 2D) = "white" {}
         _MainTex_ST("Texture Scale and Offset", Vector) = (1,1,0,0)
+        _ShadowIntensity("Shadow Intensity", Range(0, 1)) = 0.5
     }
     SubShader
     {
@@ -35,6 +36,7 @@ Shader "Custom/URP/WebGLMobileInstanced"
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(half4, _BaseColor)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _MainTex_ST)
+                UNITY_DEFINE_INSTANCED_PROP(half, _ShadowIntensity)
             UNITY_INSTANCING_BUFFER_END(Props)
 
             TEXTURE2D(_MainTex);
@@ -84,9 +86,10 @@ Shader "Custom/URP/WebGLMobileInstanced"
 
                 half4 baseColor = UNITY_ACCESS_INSTANCED_PROP(Props, _BaseColor);
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                half shadowIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _ShadowIntensity);
 
                 Light mainLight = GetMainLight(input.shadowCoord);
-                half shadow = mainLight.shadowAttenuation;
+                half shadow = lerp(1.0, mainLight.shadowAttenuation, shadowIntensity);
 
                 half3 color = baseColor.rgb * texColor.rgb * input.ndotl * shadow;
 

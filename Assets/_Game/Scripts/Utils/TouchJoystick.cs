@@ -19,14 +19,14 @@ public class TouchJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, I
         Vector2 pos;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(background, eventData.position, eventData.pressEventCamera, out pos))
         {
-            pos.x = (pos.x / background.sizeDelta.x) * 2f;
-            pos.y = (pos.y / background.sizeDelta.y) * 2f;
+            pos.x = (pos.x / background.sizeDelta.x);
+            pos.y = (pos.y / background.sizeDelta.y);
 
             inputVector = pos.magnitude > 1f ? pos.normalized : pos;
 
             handle.anchoredPosition = new Vector2(
-                inputVector.x * background.sizeDelta.x / 2f,
-                inputVector.y * background.sizeDelta.y / 2f
+                inputVector.x * (background.sizeDelta.x / 2f),
+                inputVector.y * (background.sizeDelta.y / 2f)
             );
         }
     }

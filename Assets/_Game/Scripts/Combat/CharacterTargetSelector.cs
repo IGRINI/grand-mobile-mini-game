@@ -15,7 +15,8 @@ public class CharacterTargetSelector : ICharacterTargetSelector
     {
         Transform bestTarget = null;
         float closestSqrDistance = float.MaxValue;
-        bool foundPassenger = false;
+        Transform driverTarget = null;
+        float driverSqrDistance = float.MaxValue;
         
         var characters = _characterService.GetAllCharacters();
         
@@ -27,29 +28,41 @@ public class CharacterTargetSelector : ICharacterTargetSelector
             if (characterView?.HitTarget == null) continue;
             
             bool isDriver = _characterService.IsDriver(character);
-            
-            if (foundPassenger && isDriver) continue;
-            
             var sqrDistance = (characterView.HitTarget.position - enemyPosition).sqrMagnitude;
             
-            if (!foundPassenger && !isDriver)
+            if (isDriver)
             {
-                foundPassenger = true;
-                bestTarget = characterView.HitTarget;
-                closestSqrDistance = sqrDistance;
+                if (driverTarget == null || sqrDistance < driverSqrDistance)
+                {
+                    driverTarget = characterView.HitTarget;
+                    driverSqrDistance = sqrDistance;
+                }
             }
-            else if (foundPassenger == isDriver && sqrDistance < closestSqrDistance)
+            else
             {
-                bestTarget = characterView.HitTarget;
-                closestSqrDistance = sqrDistance;
+                if (bestTarget == null || sqrDistance < closestSqrDistance)
+                {
+                    bestTarget = characterView.HitTarget;
+                    closestSqrDistance = sqrDistance;
+                }
             }
         }
         
-        if (bestTarget == null && _carView?.HitTarget != null)
+        if (bestTarget != null)
         {
-            bestTarget = _carView.HitTarget;
+            return bestTarget;
         }
         
-        return bestTarget;
+        if (driverTarget != null)
+        {
+            return driverTarget;
+        }
+        
+        if (_carView?.HitTarget != null)
+        {
+            return _carView.HitTarget;
+        }
+        
+        return null;
     }
 } 
