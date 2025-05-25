@@ -15,6 +15,6 @@ public class ExperienceInstaller : MonoInstaller
         }
         
         Container.Bind<ExperienceConfig>().FromInstance(experienceConfig).AsSingle();
-        Container.Bind<IExperienceService>().To<ExperienceService>().AsSingle();
+        Container.BindInterfacesAndSelfTo<ExperienceService>().AsSingle().NonLazy();
     }
 } 

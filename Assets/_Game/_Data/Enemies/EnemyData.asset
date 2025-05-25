@@ -19,5 +19,5 @@ MonoBehaviour:
   AttackDamage: 1
   AttackRange: 10
   AttackCooldown: 1
-  RewardExperience: 0
+  RewardExperience: 50
   DefaultWeapon: {fileID: 11400000, guid: 44f07797ee2181045a60bc6f7e2e3098, type: 2}

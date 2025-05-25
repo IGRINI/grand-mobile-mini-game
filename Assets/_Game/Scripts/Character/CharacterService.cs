@@ -4,7 +4,7 @@ using Zenject;
 using System;
 using Object = UnityEngine.Object;
 
-public class CharacterService : ICharacterService, IInitializable
+public class CharacterService : ICharacterService, IInitializable, IDisposable
 {
     private readonly List<Character> _characters = new();
     private Character _selected;
@@ -51,6 +51,12 @@ public class CharacterService : ICharacterService, IInitializable
                 _characters.Add(passengerCharacter);
                 SeatCharacter(1, passengerCharacter); // Пассажир
             }
+        }
+        
+        // Подписываемся на смерть персонажей
+        if (_healthService != null)
+        {
+            _healthService.EntityDied += OnEntityDied;
         }
     }
 
@@ -117,5 +123,46 @@ public class CharacterService : ICharacterService, IInitializable
             return characterView.SeatIndex == 0;
         }
         return character == _selected;
+    }
+    
+    private void OnEntityDied(object entity, IHealth health)
+    {
+        if (entity is Character character && _characters.Contains(character))
+        {
+            Debug.Log($"Персонаж {character.Name} умер!");
+            
+            // Убираем персонажа из UI
+            if (_teamHealthUI != null)
+            {
+                _teamHealthUI.RemovePassenger(character);
+            }
+            
+            // Убираем view персонажа
+            if (_characterViews.TryGetValue(character, out var characterView))
+            {
+                if ((characterView as CharacterView)?.gameObject != null)
+                {
+                    Object.Destroy(((CharacterView)characterView).gameObject);
+                }
+                _characterViews.Remove(character);
+            }
+            
+            // Убираем персонажа из списка
+            _characters.Remove(character);
+            
+            // Если умер выбранный персонаж, выбираем другого
+            if (_selected == character && _characters.Count > 0)
+            {
+                _selected = _characters[0];
+            }
+        }
+    }
+    
+    public void Dispose()
+    {
+        if (_healthService != null)
+        {
+            _healthService.EntityDied -= OnEntityDied;
+        }
     }
 } 

@@ -78,6 +78,7 @@ public class HealthService : IHealthService
         if (!_entities.ContainsKey(entity)) return;
         
         var health = _entities[entity];
+        Debug.Log($"HealthService.OnEntityDied: {entity.GetType().Name} умер!");
         EntityDied?.Invoke(entity, health);
     }
 } 

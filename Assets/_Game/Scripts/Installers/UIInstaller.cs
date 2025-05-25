@@ -9,5 +9,6 @@ public class UIInstaller : MonoInstaller
     {
         Container.BindInstance(_teamHealthUI).AsSingle();
         Container.Bind<GameOverManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
+        Container.Bind<TestExperienceGain>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
     }
 } 

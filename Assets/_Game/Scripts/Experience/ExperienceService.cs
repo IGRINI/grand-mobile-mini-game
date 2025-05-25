@@ -7,12 +7,12 @@ public class ExperienceService : IExperienceService, IInitializable, IDisposable
 {
     private readonly ExperienceConfig _config;
     private readonly ExperienceSystem _experienceSystem;
-    private readonly IEnemyHealthHandler _enemyHealthHandler;
+    private readonly IHealthService _healthService;
     
-    public ExperienceService(ExperienceConfig config, IEnemyHealthHandler enemyHealthHandler)
+    public ExperienceService(ExperienceConfig config, IHealthService healthService)
     {
         _config = config;
-        _enemyHealthHandler = enemyHealthHandler;
+        _healthService = healthService;
         _experienceSystem = new ExperienceSystem(config);
     }
     
@@ -30,12 +30,14 @@ public class ExperienceService : IExperienceService, IInitializable, IDisposable
     
     public void Initialize()
     {
+        Debug.Log("ExperienceService.Initialize() вызван!");
         _experienceSystem.LevelChanged += OnLevelChanged;
         _experienceSystem.ExperienceChanged += OnExperienceChanged;
         _experienceSystem.LevelUp += OnLevelUp;
         _experienceSystem.ExperienceGained += OnExperienceGained;
         
-        _enemyHealthHandler.EnemyDied += OnEnemyDied;
+        _healthService.EntityDied += OnEntityDied;
+        Debug.Log("ExperienceService подписался на EntityDied события");
     }
     
     public void Dispose()
@@ -45,14 +47,16 @@ public class ExperienceService : IExperienceService, IInitializable, IDisposable
         _experienceSystem.LevelUp -= OnLevelUp;
         _experienceSystem.ExperienceGained -= OnExperienceGained;
         
-        if (_enemyHealthHandler != null)
-            _enemyHealthHandler.EnemyDied -= OnEnemyDied;
+        if (_healthService != null)
+            _healthService.EntityDied -= OnEntityDied;
     }
     
     public void AddExperience(int amount, int enemyLevel = 1)
     {
+        Debug.Log($"ExperienceService.AddExperience вызван: amount={amount}, enemyLevel={enemyLevel}");
         float multiplier = UpgradeEffects.GetExperienceMultiplier();
         int adjustedAmount = Mathf.RoundToInt(amount * multiplier);
+        Debug.Log($"Множитель опыта: {multiplier}, скорректированный опыт: {adjustedAmount}");
         _experienceSystem.AddExperience(adjustedAmount, enemyLevel);
     }
     
@@ -85,9 +89,13 @@ public class ExperienceService : IExperienceService, IInitializable, IDisposable
         _experienceSystem.LoadSaveData(data);
     }
     
-    private void OnEnemyDied(Enemy enemy)
+    private void OnEntityDied(object entity, IHealth health)
     {
-        AddExperienceFromEnemy(enemy);
+        if (entity is Enemy enemy)
+        {
+            Debug.Log($"Враг {enemy.Name} умер! Начисляем {enemy.RewardExperience} опыта");
+            AddExperienceFromEnemy(enemy);
+        }
     }
     
     private void OnLevelChanged(int newLevel)

@@ -15,8 +15,6 @@ public class CharacterTargetSelector : ICharacterTargetSelector
     {
         Transform bestTarget = null;
         float closestSqrDistance = float.MaxValue;
-        Transform driverTarget = null;
-        float driverSqrDistance = float.MaxValue;
         
         var characters = _characterService.GetAllCharacters();
         Debug.Log($"CharacterTargetSelector: проверяем {characters.Count} персонажей");
@@ -37,25 +35,20 @@ public class CharacterTargetSelector : ICharacterTargetSelector
             }
             
             bool isDriver = _characterService.IsDriver(character);
-            var sqrDistance = (characterView.HitTarget.position - enemyPosition).sqrMagnitude;
-            
-            Debug.Log($"Персонаж {character.Name}: водитель={isDriver}, расстояние={Mathf.Sqrt(sqrDistance):F1}");
             
             if (isDriver)
             {
-                if (driverTarget == null || sqrDistance < driverSqrDistance)
-                {
-                    driverTarget = characterView.HitTarget;
-                    driverSqrDistance = sqrDistance;
-                }
+                Debug.Log($"Персонаж {character.Name} - водитель, пропускаем (водителя не трогаем)");
+                continue;
             }
-            else
+            
+            var sqrDistance = (characterView.HitTarget.position - enemyPosition).sqrMagnitude;
+            Debug.Log($"Персонаж {character.Name}: пассажир, расстояние={Mathf.Sqrt(sqrDistance):F1}");
+            
+            if (bestTarget == null || sqrDistance < closestSqrDistance)
             {
-                if (bestTarget == null || sqrDistance < closestSqrDistance)
-                {
-                    bestTarget = characterView.HitTarget;
-                    closestSqrDistance = sqrDistance;
-                }
+                bestTarget = characterView.HitTarget;
+                closestSqrDistance = sqrDistance;
             }
         }
         
@@ -65,15 +58,9 @@ public class CharacterTargetSelector : ICharacterTargetSelector
             return bestTarget;
         }
         
-        if (driverTarget != null)
-        {
-            Debug.Log($"Выбрана цель: водитель на расстоянии {Mathf.Sqrt(driverSqrDistance):F1}");
-            return driverTarget;
-        }
-        
         if (_carView?.HitTarget != null)
         {
-            Debug.Log("Выбрана цель: машина");
+            Debug.Log("Нет живых пассажиров, выбрана цель: машина");
             return _carView.HitTarget;
         }
         
