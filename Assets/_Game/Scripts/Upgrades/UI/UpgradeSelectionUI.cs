@@ -32,6 +32,12 @@ public class UpgradeSelectionUI : MonoBehaviour
     
     private void Start()
     {
+        // Инициализируем DOTween если еще не инициализирован
+        if (!DOTween.isInitialized)
+        {
+            DOTween.Init();
+        }
+        
         if (_upgradeService != null)
         {
             _upgradeService.UpgradeOptionsAvailable += OnUpgradeOptionsAvailable;
@@ -71,11 +77,16 @@ public class UpgradeSelectionUI : MonoBehaviour
     {
         if (_isSelectionActive) return;
         
+        Debug.Log("UpgradeSelectionUI: Показываем окно выбора апгрейдов");
         _isSelectionActive = true;
         Time.timeScale = 0f;
+        Debug.Log($"Time.timeScale установлен в {Time.timeScale}");
         
         if (upgradePanel != null)
+        {
             upgradePanel.SetActive(true);
+            Debug.Log("UpgradePanel активирован");
+        }
             
         if (titleText != null)
             titleText.text = "ВЫБЕРИТЕ АПГРЕЙД";
@@ -162,10 +173,13 @@ public class UpgradeSelectionUI : MonoBehaviour
     {
         if (upgradePanel == null) return;
         
+        Debug.Log("UpgradeSelectionUI: Начинаем анимацию показа панели");
+        
         var canvasGroup = upgradePanel.GetComponent<CanvasGroup>();
         if (canvasGroup == null)
             canvasGroup = upgradePanel.AddComponent<CanvasGroup>();
             
+        Debug.Log($"CanvasGroup alpha до анимации: {canvasGroup.alpha}");
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
@@ -183,6 +197,8 @@ public class UpgradeSelectionUI : MonoBehaviour
             .SetEase(Ease.OutBack).SetUpdate(true));
         sequence.SetUpdate(true);
         sequence.OnComplete(() => {
+            Debug.Log("UpgradeSelectionUI: Анимация показа завершена");
+            Debug.Log($"CanvasGroup alpha после анимации: {canvasGroup.alpha}");
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
         });
